@@ -1,6 +1,6 @@
-# CBP —Coverage and Build Policy
+# CBP — Release-evidence gate
 
-> **Before publishing:** globally replace `JunxiangPan` with your GitHub username or organization.
+> Prove the green build was not faked.
 
 A reusable, self-hosted quality gate for repositories that do not want to
 trust a green check without evidence.
@@ -45,7 +45,7 @@ need stronger provenance, enable `require-coverage-signature` with a
 ## GitHub Action
 
 ```yaml
-- uses: JunxiangPan/cbp-action@v0.1.3
+- uses: JunxiangPan/cbp-action@v0.1.4
   with:
     root: .
     config: .cbp/config.json
@@ -212,7 +212,7 @@ encoding gate, and rule auditor; it is not a separate binary-security metric.
 Every supported config should declare:
 
 ```json
-"schema_version": "0.1.3"
+"schema_version": "0.1.4"
 ```
 
 Old `v0.1.0` configs that omit it are accepted and migrated in memory with a
@@ -230,7 +230,7 @@ silently misread.
 Deprecation is a three-step process:
 
 ```text
-v0.1.3: documentation + DeprecationWarning, old behavior still works
+v0.1.4: documentation + DeprecationWarning, old behavior still works
 v0.2.0: old behavior still works, but emits a mandatory warning
 v1.0.0+: code may be removed only after the warning period
 ```
@@ -274,13 +274,58 @@ not import or execute third-party code.
 Rules are regex or literal, support `ignore_case`, `multiline`, and `dotall`,
 and default to `warn` so a new language cannot break another project's CI.
 
+## Verifying build provenance
+
+The release wheel and the manifest evidence are covered by GitHub OIDC
+attestation. Verify them from a checkout of the release repository:
+
+```bash
+gh attestation verify cbp_action-0.1.4-py3-none-any.whl   --repo JunxiangPan/cbp-action
+
+gh attestation verify quality-manifest.json   --repo JunxiangPan/cbp-action
+
+gh attestation verify quality-manifest.json.sha256   --repo JunxiangPan/cbp-action
+```
+
+CBP validates code execution paths, but cannot prove the semantic validity of
+test assertions.
+
+## Baseline and source binding
+
+Old repositories can adopt CBP without fixing historical findings immediately:
+
+```bash
+python -m cbp.cli --root . --generate-baseline cbp-baseline.json
+```
+
+The baseline suppresses only the exact recorded findings; a new finding is
+still a failure. Inline suppression is also supported:
+
+```python
+# cbp: ignore=CBP-CMT-001
+```
+
+Coverage evidence now embeds `source_files_hash` inside `coverage.json`.
+`Coverage Gate` recomputes the current measured-source hash and fails with:
+
+```text
+coverage.json is stale; source files have changed
+```
+
+A `touch coverage.json` no longer bypasses the check. Generate and stamp it with:
+
+```bash
+python -m coverage json -o coverage.json
+python tools/stamp_coverage.py --root . --coverage coverage.json
+```
+
 ## Release body and errata
 
 `docs/RELEASE_BODY.md` is the only accepted source for the GitHub Release body.
 The release workflow publishes it with `--notes-file` and then runs:
 
 ```bash
-python -m cbp.cli --verify-release v0.1.3 --repository owner/repo
+python -m cbp.cli --verify-release v0.1.4 --repository owner/repo
 ```
 
 The command fetches the live GitHub release body and compares its normalized
@@ -319,7 +364,7 @@ See [`RELEASING.md`](RELEASING.md) for the commit -> CI -> tag -> release order.
 
 ## Status
 
-v0.1.3 is a standalone release candidate. It does not import anything from
+v0.1.4 is a standalone release candidate. It does not import anything from
 the host product's `quality/`, `checks/`, or `tools/` directories.
 
 ### Coverage numbers in CI

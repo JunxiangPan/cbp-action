@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import binary_gate, claims_gate, comment_gate, coverage_gate, custom_rules, dependency_gate, docs_gate, encoding_gate, sarif, upgrade_gate, verify_release
+from . import baseline, binary_gate, claims_gate, comment_gate, coverage_gate, custom_rules, dependency_gate, docs_gate, encoding_gate, sarif, upgrade_gate, verify_release
 from .config import load_config
 
 
@@ -34,6 +34,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--release-body", default="")
     parser.add_argument("--manifest", default="")
     parser.add_argument("--sarif-output", default="")
+    parser.add_argument("--baseline", default="")
+    parser.add_argument("--generate-baseline", default="")
     parser.add_argument("--verify-release", default="")
     parser.add_argument("--repository", default="")
     parser.add_argument("--enable-coverage", type=lambda x: x.lower() == "true", default=None)
@@ -68,7 +70,7 @@ def main(argv: list[str] | None = None) -> int:
         "dependency_lock": args.dependency_lock, "install_command": args.install_command,
         "docs_manifest": args.docs_manifest, "binary_artifacts": args.binary_artifacts,
         "package_zip": args.package_zip, "claims_manifest": args.claims_manifest,
-        "claims_notes": args.claims_notes, "release_body": args.release_body,
+        "claims_notes": args.claims_notes, "release_body": args.release_body, "baseline": args.baseline,
     }.items():
         if value:
             overrides[key] = value
@@ -80,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
             overrides[key] = value
     cfg = load_config(Path(args.root), config_path, overrides)
     checks = []
-    if getattr(cfg, "enable_encoding", True):
+    if cfg.enable_encoding:
         checks.append(("encoding", encoding_gate.run))
     if cfg.enable_coverage:
         checks.append(("coverage", coverage_gate.run))
@@ -90,11 +92,11 @@ def main(argv: list[str] | None = None) -> int:
         checks.append(("comments", comment_gate.run))
     if cfg.enable_docs:
         checks.append(("docs", docs_gate.run))
-    if getattr(cfg, "enable_claims", True):
+    if cfg.enable_claims:
         checks.append(("claims", claims_gate.run))
-    if getattr(cfg, "enable_custom", True):
+    if cfg.enable_custom:
         checks.append(("custom", custom_rules.run))
-    if getattr(cfg, "enable_upgrade", True):
+    if cfg.enable_upgrade:
         checks.append(("upgrade", upgrade_gate.run))
     if cfg.enable_binary:
         checks.append(("binary", binary_gate.run))
@@ -105,6 +107,27 @@ def main(argv: list[str] | None = None) -> int:
         gate_results.append((name, passed, detail))
         print(f"{name}: {'PASS' if passed else 'FAIL'} {detail}")
         ok = ok and passed
+    if not checks:
+        ok = False
+    baseline_path = Path(args.generate_baseline) if args.generate_baseline else Path(args.baseline) if args.baseline else Path(args.root) / "cbp-baseline.json"
+    if args.generate_baseline:
+        entries = []
+        for gate, passed, detail in gate_results:
+            if not passed:
+                entries.extend((gate, line) for line in detail.splitlines() if line.strip())
+        baseline.write_entries(baseline_path, entries)
+        print(f"BASELINE_WRITTEN path={baseline_path} entries={len(entries)}")
+        return 0
+    allowed_baseline = baseline.load(baseline_path)
+    if allowed_baseline:
+        adjusted = []
+        for gate, passed, detail in gate_results:
+            kept = [line for line in detail.splitlines() if baseline.fingerprint(gate, line) not in allowed_baseline]
+            if not passed and not any(line.strip() for line in kept):
+                passed = True
+            adjusted.append((gate, passed, chr(10).join(kept) if kept else "baseline-suppressed"))
+        gate_results = adjusted
+        ok = all(passed for _, passed, _ in gate_results)
     if args.sarif_output:
         try:
             target = Path(args.sarif_output)
@@ -113,7 +136,7 @@ def main(argv: list[str] | None = None) -> int:
         except OSError as exc:
             print(f"sarif: FAIL cannot write {args.sarif_output}: {exc}")
             ok = False
-    print("CBP_RESULT=" + ("PASS" if ok else "FAIL"))
+    print("CBP_RESULT=" + ("PASS" if ok else "FAIL") + " gates_ran=" + str(len(checks)))
     return 0 if ok or args.mode in {"audit", "warn"} else 1
 
 

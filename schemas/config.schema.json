@@ -141,6 +141,9 @@
     },
     "enable_custom": {
       "type": "boolean"
+    },
+    "baseline": {
+      "type": "string"
     }
   },
   "additionalProperties": false,
