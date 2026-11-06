@@ -26,7 +26,7 @@ copy-paste comments, and edited evidence fail closed.
 ## GitHub Action
 
 ```yaml
-- uses: JunxiangPan/cbp-action@v0.1.0
+- uses: JunxiangPan/cbp-action@v0.1.1
   with:
     root: .
     config: .cbp/config.json
@@ -35,7 +35,7 @@ copy-paste comments, and edited evidence fail closed.
     coverage-threshold: "80"
     policy-coverage-threshold: "85"
     dependency-lock: requirements.lock
-    installer-core: installer/install.ps1
+    install-command: installer/install.ps1
     docs-manifest: .cbp/docs-manifest.json
     binary-artifacts: artifacts
     claims-manifest: quality-manifest.json
@@ -68,7 +68,7 @@ or `CBP_RESULT=FAIL`.
 | `coverage-threshold` | Legacy single-group threshold |
 | `policy-coverage-threshold` | Legacy policy threshold |
 | `dependency-lock` | Hash-locked requirements file |
-| `installer-core` | Installer that enforces `--require-hashes` |
+| `install-command` | Installer that enforces `--require-hashes` |
 | `docs-manifest` | Document SHA256 manifest |
 | `binary-artifacts` | `.build.json` / `.sbom.json` directory |
 | `package-zip` | Optional release ZIP |
@@ -85,14 +85,14 @@ or `CBP_RESULT=FAIL`.
 
 ### Required path inputs
 
-`coverage-json`, `coverage-allowlist`, `dependency-lock`, `installer-core`,
-`docs-manifest`, `binary-artifacts`, `claims-manifest`, and `claims-notes` have
-**no product-specific defaults**. Pass only the gates you enable.
+All path inputs are optional. A path is required only when its gate is enabled;
+the gate fails closed with an explicit missing-path error if it is enabled
+without the corresponding input.
 
-### Minimal Python project example
+### Quick start
 
-See [`usage.yml`](usage.yml) for a complete workflow that runs coverage,
-then calls the Action.
+The canonical, copyable workflow is [`usage.yml`](usage.yml). It runs
+coverage and then calls the Action with only the gates it enables.
 
 ## Local CLI
 
@@ -116,7 +116,7 @@ See [`schemas/config.schema.json`](schemas/config.schema.json).
 {
   "coverage_json": "coverage.json",
   "coverage_allowlist": ".cbp/coverage_allowlist.json",
-  "measured_files": ["src/example.py"],
+  "target_files": ["src/example.py"],
   "policy_file": "src/example.py",
   "coverage_threshold": 80,
   "policy_threshold": 85,
@@ -154,7 +154,7 @@ Suggested migration:
 3. When the group is stable, change mode to "enforce".
 ```
 
-`broker_files`, `measured_files`, `policy_file`, `coverage_threshold`, and
+`target_files`, `target_files`, `policy_file`, `coverage_threshold`, and
 `policy_threshold` remain supported for single-group configurations.
 
 ## Self-test
@@ -162,7 +162,7 @@ Suggested migration:
 ```bash
 cd cbp-action
 python -m pip install -e ".[test]"
-python -m coverage run --branch -m pytest -q tests
+python -m coverage run --branch --source=src/cbp,tools -m pytest -q tests
 python -m coverage json -o coverage.json
 python -m cbp.cli --root . --mode enforce
 ```
@@ -170,13 +170,22 @@ python -m cbp.cli --root . --mode enforce
 The package has no runtime dependencies outside the Python standard library.
 `pytest` and `coverage` are optional test dependencies.
 
+CBP is distributed through GitHub Actions and GitHub Releases only. It is not
+published to PyPI; the top-level import package is `cbp` for the action runtime.
+
+The manifest is checksum + run-id pinned. It is not an OIDC attestation or a
+cryptographic signature.
+
+`security_core` coverage is the coverage of the gate modules, config, CLI,
+encoding gate, and rule auditor; it is not a separate binary-security metric.
+
 ## Releasing
 
 See [`RELEASING.md`](RELEASING.md) for the commit -> CI -> tag -> release order.
 
 ## Status
 
-v0.1.0 is a standalone release candidate. It does not import anything from
+v0.1.1 is a standalone release candidate. It does not import anything from
 the host product's `quality/`, `checks/`, or `tools/` directories.
 
 ### Coverage numbers in CI

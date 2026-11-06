@@ -9,7 +9,13 @@ import re
 from .config import GateConfig
 
 TOKEN = re.compile(r"(?m)^QUALITY_COUNTS:\s*(\d+)/(\d+)\s*$")
-HANDWRITTEN = re.compile(r"(?<![\w/])26\s*/\s*26(?![\w/])")
+GATE_CLAIM = re.compile(r"\b(?:all|across|through)\s+([A-Za-z]+|\d+)\s+gates?\b", re.IGNORECASE)
+WORDS = {
+    word: number
+    for number, word in enumerate(
+        ("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
+    )
+}
 
 
 def run(cfg: GateConfig) -> tuple[bool, str]:
@@ -35,8 +41,13 @@ def run(cfg: GateConfig) -> tuple[bool, str]:
     actual = f"{tokens[0][0]}/{tokens[0][1]}"
     if actual != expected:
         return False, f"notes {actual} != manifest {expected}"
-    if HANDWRITTEN.search(text):
-        return False, "handwritten 26/26 claim is forbidden"
-    if data.get("profile") == "release" and int(counts.get("passed", 0)) != 26:
-        return False, "release profile is not 26/26"
+    total = int(counts.get("total", -1))
+    gate_claim = GATE_CLAIM.search(text)
+    if gate_claim:
+        token = gate_claim.group(1).lower()
+        number = int(token) if token.isdigit() else WORDS.get(token)
+        if number is None:
+            return False, f"unknown gate count claim: {gate_claim.group(0)}"
+        if number != total:
+            return False, f"notes claim {token} gates but manifest has {total}"
     return True, f"claims={actual}"

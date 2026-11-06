@@ -9,7 +9,7 @@
     "coverage_allowlist": {
       "type": "string"
     },
-    "broker_files": {
+    "target_files": {
       "type": "array",
       "items": {
         "type": "string"
@@ -27,7 +27,7 @@
     "dependency_lock": {
       "type": "string"
     },
-    "installer_core": {
+    "install_command": {
       "type": "string"
     },
     "docs_manifest": {
@@ -81,7 +81,7 @@
     "enable_claims": {
       "type": "boolean"
     },
-    "measured_files": {
+    "target_files": {
       "type": "array",
       "items": {
         "type": "string"
