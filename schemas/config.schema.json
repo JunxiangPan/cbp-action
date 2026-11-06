@@ -119,6 +119,9 @@
         },
         "additionalProperties": false
       }
+    },
+    "enable_encoding": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false
