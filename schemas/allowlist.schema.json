@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CBP coverage allowlist",
+  "type": "object",
+  "required": ["files"],
+  "properties": {
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["lines", "reason"],
+          "properties": {
+            "lines": {"type": "array", "prefixItems": [{"type": "integer"}, {"type": "integer"}], "minItems": 2, "maxItems": 2},
+            "reason": {"type": "string", "minLength": 12}
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

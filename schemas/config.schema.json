@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CBP config",
+  "type": "object",
+  "properties": {
+    "coverage_json": {
+      "type": "string"
+    },
+    "coverage_allowlist": {
+      "type": "string"
+    },
+    "broker_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "policy_file": {
+      "type": "string"
+    },
+    "coverage_threshold": {
+      "type": "number"
+    },
+    "policy_threshold": {
+      "type": "number"
+    },
+    "dependency_lock": {
+      "type": "string"
+    },
+    "installer_core": {
+      "type": "string"
+    },
+    "docs_manifest": {
+      "type": "string"
+    },
+    "comment_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "binary_artifacts": {
+      "type": "string"
+    },
+    "binary_limit_mb": {
+      "type": "number"
+    },
+    "package_zip": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "claims_manifest": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "claims_notes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "enable_coverage": {
+      "type": "boolean"
+    },
+    "enable_dependency": {
+      "type": "boolean"
+    },
+    "enable_comments": {
+      "type": "boolean"
+    },
+    "enable_docs": {
+      "type": "boolean"
+    },
+    "enable_binary": {
+      "type": "boolean"
+    },
+    "enable_claims": {
+      "type": "boolean"
+    },
+    "measured_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "coverage_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "files",
+          "threshold",
+          "mode"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "threshold": {
+            "type": "number"
+          },
+          "mode": {
+            "enum": [
+              "enforce",
+              "warn"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

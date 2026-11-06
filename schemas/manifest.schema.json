@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CBP quality manifest",
+  "type": "object",
+  "required": ["counts"],
+  "properties": {
+    "profile": {"type": "string"},
+    "counts": {
+      "type": "object",
+      "required": ["passed", "total"],
+      "properties": {"passed": {"type": "integer"}, "total": {"type": "integer"}}
+    }
+  }
+}
