@@ -6,7 +6,7 @@ examples.
 
 ## 1. Create the standalone repository
 
-Option A â€?subtree split, preserves history:
+Option A éˆ¥?subtree split, preserves history:
 
 ```bash
 cd /path/to/Cyber-Butler-Security
@@ -16,7 +16,7 @@ git remote add cbp https://github.com/JunxiangPan/cbp-action.git
 git push cbp cbp-v0.1.0:main
 ```
 
-Option B â€?copy the directory:
+Option B éˆ¥?copy the directory:
 
 ```bash
 mkdir cbp-action-repo
@@ -100,7 +100,7 @@ Create a release, then open Marketplace publishing for the repository.
 Recommended metadata:
 
 ```text
-Name: CBP â€?Coverage and Build Policy
+Name: CBP éˆ¥?Coverage and Build Policy
 Category: Security
 Description: Fail closed on fake coverage, unpinned dependencies,
              boilerplate comments, tampered docs, and unsigned binaries.

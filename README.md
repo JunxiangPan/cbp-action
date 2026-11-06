@@ -1,4 +1,4 @@
-# CBP �?Coverage and Build Policy
+# CBP 鈥?Coverage and Build Policy
 
 > **Before publishing:** globally replace `JunxiangPan` with your GitHub username or organization.
 
@@ -179,6 +179,6 @@ the host product's `quality/`, `checks/`, or `tools/` directories.
 
 ### Coverage numbers in CI
 
-CI coverage may differ from local by ±0.5% due to platform-specific line
+CI coverage may differ from local by 卤0.5% due to platform-specific line
 coverage. The gate uses the CI value.
 
