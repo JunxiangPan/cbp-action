@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CBP upgrade gate",
+  "type": "object",
+  "properties": {
+    "upgrade_script": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Trusted command run from the repository root; non-zero blocks release."
+    },
+    "upgrade_timeout_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 120
+    },
+    "upgrade_fixtures": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "previous_schema": {"type": "string"},
+    "current_schema": {"type": "string"},
+    "allow_breaking_changes": {
+      "type": "boolean",
+      "default": false,
+      "description": "Explicit human approval for a schema compatibility failure."
+    }
+  },
+  "additionalProperties": false
+}

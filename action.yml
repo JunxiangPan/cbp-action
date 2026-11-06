@@ -13,6 +13,12 @@ inputs:
   coverage-allowlist:
     description: Path to the coverage allowlist JSON
     default: ""
+  coverage-signature:
+    description: Optional coverage.json SHA256 sidecar
+    default: ""
+  require-coverage-signature:
+    description: Require the coverage sidecar to match
+    default: "false"
   coverage-threshold:
     description: Minimum allowlisted measured coverage
     default: "80"
@@ -24,6 +30,9 @@ inputs:
     default: ""
   install-command:
     description: Installer file that must contain --require-hashes
+    default: ""
+  installer-core:
+    description: Deprecated alias for install-command (accepted through v0.2.x)
     default: ""
   docs-manifest:
     description: Incident-history manifest
@@ -38,7 +47,13 @@ inputs:
     description: quality-manifest.json used by the claims gate
     default: ""
   claims-notes:
-    description: release notes checked by the claims gate
+    description: generated release notes checked by the claims gate
+    default: ""
+  release-body:
+    description: checked-in release body validated by the claims gate
+    default: ""
+  sarif-output:
+    description: optional SARIF 2.1.0 output path
     default: ""
   enable-coverage:
     default: "true"
@@ -53,6 +68,12 @@ inputs:
   enable-binary:
     default: "true"
   enable-claims:
+    default: "true"
+  enable-custom:
+    description: enable config-driven custom rules
+    default: "true"
+  enable-upgrade:
+    description: enable config-driven upgrade checks
     default: "true"
   mode:
     description: audit logs failures but exits zero; enforce exits non-zero
@@ -72,15 +93,19 @@ runs:
         OUTPUT=$(python -m cbp.cli --root "${{ inputs.root }}" \
           --coverage-json "${{ inputs.coverage-json }}" \
           --coverage-allowlist "${{ inputs.coverage-allowlist }}" \
+          --coverage-signature "${{ inputs.coverage-signature }}" \
+          --require-coverage-signature "${{ inputs.require-coverage-signature }}" \
           --coverage-threshold "${{ inputs.coverage-threshold }}" \
           --policy-coverage-threshold "${{ inputs.policy-coverage-threshold }}" \
           --dependency-lock "${{ inputs.dependency-lock }}" \
-          --install-command "${{ inputs.install-command }}" \
+          --install-command "${{ inputs.install-command || inputs.installer-core }}" \
           --docs-manifest "${{ inputs.docs-manifest }}" \
           --binary-artifacts "${{ inputs.binary-artifacts }}" \
           --package-zip "${{ inputs.package-zip }}" \
           --claims-manifest "${{ inputs.claims-manifest }}" \
           --claims-notes "${{ inputs.claims-notes }}" \
+          --release-body "${{ inputs.release-body }}" \
+          --sarif-output "${{ inputs.sarif-output }}" \
           --enable-coverage "${{ inputs.enable-coverage }}" \
           --enable-encoding "${{ inputs.enable-encoding }}" \
           --enable-dependency "${{ inputs.enable-dependency }}" \
@@ -88,6 +113,8 @@ runs:
           --enable-docs "${{ inputs.enable-docs }}" \
           --enable-binary "${{ inputs.enable-binary }}" \
           --enable-claims "${{ inputs.enable-claims }}" \
+          --enable-custom "${{ inputs.enable-custom }}" \
+          --enable-upgrade "${{ inputs.enable-upgrade }}" \
           --mode "${{ inputs.mode }}" 2>&1)
         CODE=$?
         echo "$OUTPUT"

@@ -81,12 +81,6 @@
     "enable_claims": {
       "type": "boolean"
     },
-    "target_files": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
     "coverage_groups": {
       "type": "array",
       "items": {
@@ -122,7 +116,35 @@
     },
     "enable_encoding": {
       "type": "boolean"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "custom_rules": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "evidence_readers": {
+      "type": "object"
+    },
+    "release_body": {
+      "type": "string"
+    },
+    "coverage_signature": {
+      "type": "string"
+    },
+    "require_coverage_signature": {
+      "type": "boolean"
+    },
+    "enable_custom": {
+      "type": "boolean"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "required": [
+    "schema_version"
+  ]
 }

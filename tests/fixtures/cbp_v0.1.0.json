@@ -1,0 +1,5 @@
+{
+  "installer_core": "install-test.sh",
+  "broker_files": ["src/cbp/coverage_gate.py"],
+  "coverage_threshold": 80
+}

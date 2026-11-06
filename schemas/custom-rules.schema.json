@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CBP custom rules",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "name",
+      "pattern",
+      "files",
+      "message"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^CBP-CUSTOM-[A-Za-z0-9_-]+$"
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "pattern": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "match": {
+        "enum": [
+          "regex",
+          "literal"
+        ],
+        "default": "regex"
+      },
+      "files": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "exclude": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "message": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+      },
+      "severity": {
+        "enum": [
+          "error",
+          "warning",
+          "note"
+        ],
+        "default": "warning"
+      },
+      "mode": {
+        "enum": [
+          "enforce",
+          "warn"
+        ],
+        "default": "warn"
+      },
+      "max_matches": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 1000
+      },
+      "reader": {
+        "type": "string",
+        "description": "Named evidence reader; auto-selected by suffix when omitted"
+      },
+      "flags": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "ignore_case",
+            "multiline",
+            "dotall"
+          ]
+        },
+        "default": []
+      }
+    },
+    "additionalProperties": false
+  }
+}

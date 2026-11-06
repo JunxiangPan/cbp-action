@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CBP evidence readers",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "required": [
+      "suffixes"
+    ],
+    "properties": {
+      "suffixes": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "encoding": {
+        "type": "string",
+        "default": "utf-8"
+      },
+      "max_bytes": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "additionalProperties": false
+  }
+}
