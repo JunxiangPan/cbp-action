@@ -94,7 +94,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           test -f artifact/docs/RELEASE_NOTES.generated.md
-          gh release create "${{ inputs.release_tag }}" dist/* artifact/quality-manifest.json artifact/quality-manifest.json.sha256 artifact/docs/RELEASE_NOTES.generated.md --notes-file "$GITHUB_WORKSPACE/docs/RELEASE_BODY.md"
+          gh release create "${{ inputs.release_tag }}" dist/*.whl dist/*.tar.gz artifact/quality-manifest.json artifact/quality-manifest.json.sha256 artifact/docs/RELEASE_NOTES.generated.md --notes-file "$GITHUB_WORKSPACE/docs/RELEASE_BODY.md"
       - name: Verify published release body
         env:
           GH_TOKEN: ${{ github.token }}

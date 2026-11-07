@@ -11,7 +11,7 @@ from . import baseline, binary_gate, suppression, claims_gate, comment_gate, cov
 from .config import SCHEMA_VERSION, load_config
 
 
-def _init(argv: list[str]) -> int:
+def _init(argv: list[str]) -> int:  # pragma: no cover - exercised via subprocess CLI
     """Generate a minimal cbp.json with a schema version."""
     import argparse
 
@@ -82,7 +82,7 @@ def _changed_files(root: Path, ref: str) -> set[str]:
     return {line.strip().replace("\\", "/") for line in completed.stdout.splitlines() if line.strip()}
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised via subprocess CLI
     """Run enabled CBP gates and return a process exit code."""
     if argv is None:
         argv = __import__("sys").argv[1:]
@@ -136,7 +136,18 @@ def main(argv: list[str] | None = None) -> int:
         body = Path(args.release_body) if args.release_body else Path(args.root) / "docs" / "RELEASE_BODY.md"
         ok, detail = verify_release.verify(repository, args.verify_release, body, verify_release.token_from_env())
         print(("RELEASE_BODY_OK " if ok else "") + detail)
-        return 0 if ok else 1
+        if not ok:
+            return 1
+        asset_manifest = Path(args.root) / "dist" / "RELEASE_ASSETS.sha256"
+        if asset_manifest.is_file():
+            from .verify_release_assets import verify_from_manifest
+            assets_ok, assets_detail = verify_from_manifest(
+                asset_manifest, repository, args.verify_release, verify_release.token_from_env()
+            )
+            print(assets_detail)
+            if not assets_ok:
+                return 1
+        return 0
     config_path = Path(args.config) if args.config else Path(args.root) / "cbp.json"
     if not args.config and not config_path.is_file():
         config_path = Path(args.root) / ".cbp" / "config.json"
@@ -258,5 +269,5 @@ def main(argv: list[str] | None = None) -> int:
     return 0 if ok or args.mode in {"audit", "warn"} else 1
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover - module entry point
     raise SystemExit(main())

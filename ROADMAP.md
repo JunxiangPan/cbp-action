@@ -91,3 +91,9 @@ pinning, ReDoS limits, or architecture changes.
   published and the CBS config can safely require v0.1.6.
 - Add independent `cbp-verify` release verification and broader evidence
   readers.
+
+## v1.0.3
+
+- security_core coverage floor: 90.0.
+- SARIF 2.1.0 output for GitHub Code Scanning.
+- Release asset inventory verification.

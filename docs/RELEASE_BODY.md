@@ -1,6 +1,6 @@
-# CBP v1.0.2 — Release-evidence gate
+# CBP v1.0.3 — Release-evidence gate
 
-CBP v1.0.2 fixes release discipline: claims now verifies version, wheel hash, and PyPI link.
+CBP v1.0.3 closes the release-discipline gaps found by external review.
 
 ## Verification
 
@@ -10,20 +10,18 @@ All 9 gates are active.
 ```
 
 ```text
-cbp_action-1.0.2-py3-none-any.whl
-sha256: 4a4acd443a43b7325b7926b0399adb6ae177a060407c142b9c3b0c1f751611c1
+cbp_action-1.0.3-py3-none-any.whl
+sha256: d0a6537e53c1f6b5b1087736bdbbc4cac0fe108903f5da034030bd181dac5dae
 ```
 
-https://pypi.org/project/cbp-action/1.0.2/
+https://pypi.org/project/cbp-action/1.0.3/
 
 ## What changed
 
-- claims gate enforces the release version, artifact SHA256, and PyPI link.
-- coverage ratchet restored to the v1.0.0 historical floor: cbp 85.59%, security_core 87.18%.
-- E2E test rejects a release body that names the wrong version.
-- GitHub Checks API implementation creates per-gate check runs with annotations.
-
-## Boundary
-
-The `scan_engine=cel` comments experiment remains disabled after measuring
-5.149s for 5,000 files against the 4.000s red line. Python remains the default.
+- `action.yml` verifies `dist/WHEEL_SHA256` before installing the wheel.
+- Release assets are built automatically; `RELEASE_NOTES.generated.md` is part of `gh release create`.
+- `--verify-release` checks the release asset inventory and rejects extra, missing, or wrong-hash assets.
+- `security_core` coverage floor is 90.0, with 90.02 measured.
+- README version sequence and PyPI instructions corrected.
+- CHANGELOG covers 1.0.0 through 1.0.3.
+- VM chaos evidence is explicitly a v1.1.0 roadmap item.

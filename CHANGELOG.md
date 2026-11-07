@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.0.3 — 2026-11-08
+
+- `action.yml` verifies `dist/WHEEL_SHA256` before installing the wheel.
+- Release workflow publishes notes automatically and no longer uploads `WHEEL_SHA256` as an asset.
+- `verify_release_assets` rejects extra, missing, or hash-mismatched release assets.
+- `security_core` coverage threshold restored to 90.0; measured 90.02.
+- README version progression corrected; PyPI install link added.
+- VM chaos evidence marked as v1.1.0 roadmap.
+
+## 1.0.2 — 2026-11-08
+
+- Claims gate verifies release version, wheel SHA256, and PyPI link.
+- E2E test rejects a release body with the wrong version.
+- Coverage ratchet restored to v1.0.0 historical floor.
+- Checks API check runs and annotations implemented.
+
+## 1.0.1 — 2026-11-08
+
+- `cbp policy test` CLI entry wired and covered by E2E.
+- `_configured` honors packs-only configurations.
+- Configuration-only packs trigger custom gate.
+- CEL findings report the matching file path.
+- Benchmark platform differences documented.
+
+## 1.0.0 — 2026-11-08
+
+- First stable release.
+- Nine gates, CEL policy layer, rule packs, SARIF, AST taint, and external report aggregation.
+- PyPI trusted publishing via GitHub OIDC.
+
 ## 0.1.8 — 2026-11-07
 
 - Added ambiguous Windows-backslash path detection in .py/.ps1 files.

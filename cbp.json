@@ -68,9 +68,10 @@
         "src/cbp/custom_rules.py",
         "src/cbp/sarif.py",
         "src/cbp/readers.py",
-        "src/cbp/upgrade_gate.py"
+        "src/cbp/upgrade_gate.py",
+        "src/cbp/verify_release_assets.py"
       ],
-      "threshold": 86.6,
+      "threshold": 90,
       "mode": "enforce"
     }
   ],
@@ -104,7 +105,7 @@
       "encoding": "utf-8"
     }
   },
-  "schema_version": "1.0.2",
+  "schema_version": "1.0.3",
   "upgrade_fixtures": [
     "tests/fixtures/cbp_v0.1.0.json"
   ],
@@ -116,7 +117,7 @@
   "coverage_ratchet": "coverage-ratchet.json",
   "rules_manifest": "rules/rules.sha256",
   "rules_changelog_manifest": "rules/changelog.sha256",
-  "release_version": "1.0.2",
-  "release_artifact": "dist/cbp_action-1.0.2-py3-none-any.whl",
+  "release_version": "1.0.3",
+  "release_artifact": "dist/cbp_action-1.0.3-py3-none-any.whl",
   "pypi_project": "cbp-action"
 }
