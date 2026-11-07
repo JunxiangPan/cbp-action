@@ -11,7 +11,7 @@ All 9 gates are active.
 
 ```text
 cbp_action-1.0.4-py3-none-any.whl
-sha256: 5bf44c8f18145c614f7920b8de694844d59fe5ffc68646b28d0bba85117cd0ac
+sha256: 737b63354fa6a3ec3897ce44e54ac31af8381f164dc4467d41ae520d549efef9
 ```
 
 https://pypi.org/project/cbp-action/1.0.4/
