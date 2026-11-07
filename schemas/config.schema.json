@@ -148,6 +148,9 @@
     "required_artifacts": {
       "type": "array",
       "description": "Required when package_zip is configured."
+    },
+    "packs": {
+      "type": "array"
     }
   },
   "additionalProperties": false,

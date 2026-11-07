@@ -1,0 +1,22 @@
+{
+  "name": "cbp-pack-baseline",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "name": "no-private-key",
+      "pattern": "BEGIN (RSA |EC )?PRIVATE KEY",
+      "files": ["**/*"],
+      "message": "private key material must not be committed",
+      "mode": "enforce",
+      "severity": "error"
+    },
+    {
+      "name": "no-secret-marker",
+      "cel": "files.exists(t, t.matches('(?s).*CBS_SECRET_MARKER.*'))",
+      "files": ["**/*"],
+      "message": "secret marker found",
+      "mode": "warn",
+      "severity": "warning"
+    }
+  ]
+}

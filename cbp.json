@@ -70,7 +70,7 @@
         "src/cbp/readers.py",
         "src/cbp/upgrade_gate.py"
       ],
-      "threshold": 88.0,
+      "threshold": 89.0,
       "mode": "enforce"
     }
   ],
@@ -113,5 +113,7 @@
     "pyproject.toml",
     "README.md"
   ],
-  "coverage_ratchet": "coverage-ratchet.json"
+  "coverage_ratchet": "coverage-ratchet.json",
+  "rules_manifest": "rules/rules.sha256",
+  "rules_changelog_manifest": "rules/changelog.sha256"
 }

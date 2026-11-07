@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=68,<75"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -20,10 +20,14 @@ classifiers = [
 cbp = "cbp.cli:main"
 
 [project.optional-dependencies]
+policy = ["cel-python>=0.5.0"]
 test = [
   "pytest>=8.0",
   "coverage>=7.6",
 ]
+
+[tool.setuptools.package-data]
+cbp = ["data/**/*"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
