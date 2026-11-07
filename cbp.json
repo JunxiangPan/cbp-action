@@ -70,7 +70,7 @@
         "src/cbp/readers.py",
         "src/cbp/upgrade_gate.py"
       ],
-      "threshold": 87.0,
+      "threshold": 89.0,
       "mode": "enforce"
     }
   ],

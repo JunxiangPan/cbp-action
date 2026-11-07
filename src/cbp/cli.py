@@ -156,6 +156,7 @@ def main(argv: list[str] | None = None) -> int:
     changed = _changed_files(Path(args.root), args.diff) if args.diff else set()
 
     def execute(item):
+        """Run one gate with suppression and diff filtering."""
         name, check = item
         if not _configured(name, cfg):
             return name, True, "SKIPPED (not configured)", True

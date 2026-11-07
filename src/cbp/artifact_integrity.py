@@ -54,7 +54,7 @@ def _is_absolute_command(value: str) -> bool:
 
 PATH_ESCAPE = None  # line-based check below avoids regex escaping ambiguity
 ACTION_REF = re.compile(r"uses:\s*([^\s#]+)")
-FULL_SHA = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[0-9a-f]{40}$")
+FULL_SHA = re.compile(r"^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+@[0-9a-f]{40}$")
 
 
 def path_escape_findings(cfg: GateConfig) -> list[str]:
