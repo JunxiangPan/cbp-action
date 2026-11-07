@@ -44,17 +44,22 @@ def rules_digest(rules, packs) -> str:
 def _cache_state(cfg: GateConfig, rules, previous: dict | None = None) -> tuple[str, dict]:
     digest = rules_digest(rules, getattr(cfg, "packs", ()) or ())
     files: dict[str, dict] = {}
-    for path in sorted(cfg.root.rglob("*")):
-        if not path.is_file() or (set(path.parts) & SKIP_PARTS) or path.name == ".cache.json":
-            continue
-        relative = path.relative_to(cfg.root).as_posix()
-        stat = path.stat()
-        old = (previous or {}).get(relative, {})
-        if old.get("size") == stat.st_size and old.get("mtime_ns") == stat.st_mtime_ns and old.get("hash"):
-            value = old["hash"]
-        else:
-            value = hashlib.sha256(path.read_bytes()).hexdigest()
-        files[relative] = {"size": stat.st_size, "mtime_ns": stat.st_mtime_ns, "hash": value}
+    import os
+
+    for base, dirs, names in os.walk(cfg.root):
+        dirs[:] = [name for name in dirs if name not in SKIP_PARTS]
+        for name in names:
+            if name in SKIP_PARTS or name == ".cache.json":
+                continue
+            path = Path(base) / name
+            relative = path.relative_to(cfg.root).as_posix()
+            stat = path.stat()
+            old = (previous or {}).get(relative, {})
+            if old.get("size") == stat.st_size and old.get("mtime_ns") == stat.st_mtime_ns and old.get("hash"):
+                value = old["hash"]
+            else:
+                value = hashlib.sha256(path.read_bytes()).hexdigest()
+            files[relative] = {"size": stat.st_size, "mtime_ns": stat.st_mtime_ns, "hash": value}
     key = hashlib.sha256((digest + json.dumps(files, sort_keys=True)).encode("utf-8")).hexdigest()
     return key, files
 
