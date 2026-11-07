@@ -92,7 +92,7 @@ jobs:
       - name: Generate release asset manifest
         run: |
           cd dist
-          sha256sum *.whl *.tar.gz             ../artifact/quality-manifest.json             ../artifact/quality-manifest.json.sha256             ../artifact/docs/RELEASE_NOTES.generated.md > RELEASE_ASSETS.sha256
+          sha256sum *.whl *.tar.gz ../artifact/quality-manifest.json ../artifact/quality-manifest.json.sha256 ../artifact/docs/RELEASE_NOTES.generated.md | awk '{n=$2; sub(/.*\//,"",n); print $1 " *" n}' > RELEASE_ASSETS.sha256
       - name: Publish release from the generated notes
         env:
           GH_TOKEN: ${{ github.token }}
