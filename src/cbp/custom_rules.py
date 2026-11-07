@@ -41,15 +41,22 @@ def rules_digest(rules, packs) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def _cache_key(cfg: GateConfig, rules) -> str:
+def _cache_state(cfg: GateConfig, rules, previous: dict | None = None) -> tuple[str, dict]:
     digest = rules_digest(rules, getattr(cfg, "packs", ()) or ())
-    files = sorted(
-        (path.relative_to(cfg.root).as_posix(), hashlib.sha256(path.read_bytes()).hexdigest())
-        for path in cfg.root.rglob("*")
-        if path.is_file() and not (set(path.parts) & SKIP_PARTS)
-        and path.name != ".cache.json"
-    )
-    return hashlib.sha256((digest + json.dumps(files)).encode("utf-8")).hexdigest()
+    files: dict[str, dict] = {}
+    for path in sorted(cfg.root.rglob("*")):
+        if not path.is_file() or (set(path.parts) & SKIP_PARTS) or path.name == ".cache.json":
+            continue
+        relative = path.relative_to(cfg.root).as_posix()
+        stat = path.stat()
+        old = (previous or {}).get(relative, {})
+        if old.get("size") == stat.st_size and old.get("mtime_ns") == stat.st_mtime_ns and old.get("hash"):
+            value = old["hash"]
+        else:
+            value = hashlib.sha256(path.read_bytes()).hexdigest()
+        files[relative] = {"size": stat.st_size, "mtime_ns": stat.st_mtime_ns, "hash": value}
+    key = hashlib.sha256((digest + json.dumps(files, sort_keys=True)).encode("utf-8")).hexdigest()
+    return key, files
 
 
 def _detect(cfg: GateConfig) -> tuple[bool, str]:
@@ -206,17 +213,18 @@ def run(cfg: GateConfig) -> tuple[bool, str]:
     """Run custom detection with optional content-addressed cache."""
     cache_path = cfg.path(getattr(cfg, "cache_file", "") or "") if getattr(cfg, "cache_file", "") else None
     rules = list(getattr(cfg, "custom_rules", ()) or ())
-    key = _cache_key(cfg, rules) if cache_path is not None else ""
+    cached: dict = {}
     if cache_path is not None and cache_path.is_file():
         try:
             cached = json.loads(cache_path.read_text(encoding="utf-8"))
-            if cached.get("key") == key:
-                return bool(cached["passed"]), str(cached["detail"])
-        except (OSError, ValueError, KeyError):
-            pass
+        except (OSError, ValueError):
+            cached = {}
+    key, files = _cache_state(cfg, rules, cached.get("files")) if cache_path is not None else ("", {})
+    if cache_path is not None and cached.get("key") == key:
+        return bool(cached["passed"]), str(cached["detail"])
     passed, detail = _detect(cfg)
     passed, detail = cel_gates.apply("custom", passed, detail, cfg)
     if cache_path is not None:
         cache_path.parent.mkdir(parents=True, exist_ok=True)
-        cache_path.write_text(json.dumps({"key": key, "passed": passed, "detail": detail}), encoding="utf-8")
+        cache_path.write_text(json.dumps({"key": key, "files": files, "passed": passed, "detail": detail}), encoding="utf-8")
     return passed, detail

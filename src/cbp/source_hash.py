@@ -3,6 +3,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import platform
+import subprocess
+import sys
 from pathlib import Path
 from typing import Iterable
 
@@ -31,9 +35,26 @@ def compute(root: Path, files: Iterable[Path]) -> str:
     return digest.hexdigest()
 
 
+def environment_fingerprint(root: Path) -> str:
+    """Fingerprint the interpreter, OS, and commit used to measure coverage."""
+    try:
+        commit = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10, check=False).stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        commit = ""
+    payload = {
+        "python": sys.version,
+        "implementation": platform.python_implementation(),
+        "platform": platform.platform(),
+        "os": os.name,
+        "commit": commit,
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
+
+
 def stamp(coverage_path: Path, root: Path) -> str:
     data = json.loads(coverage_path.read_text(encoding="utf-8"))
     value = compute(root, measured_files(root, data))
     data["source_files_hash"] = value
+    data["environment_fingerprint"] = environment_fingerprint(root)
     coverage_path.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
     return value

@@ -141,6 +141,9 @@ def _load_coverage(path: Path) -> dict[str, Any]:
 def _source_hash_problem(root: Path, data: dict) -> str:
     if data.get("format") in {"lcov", "cobertura"}:
         return ""
+    expected_env = data.get("environment_fingerprint")
+    if expected_env and expected_env != source_hash.environment_fingerprint(root):
+        return "coverage.json environment fingerprint changed; regenerate coverage"
     files = source_hash.measured_files(root, data)
     expected = data.get("source_files_hash")
     if not expected:
