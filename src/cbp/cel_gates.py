@@ -27,5 +27,7 @@ def apply(gate: str, passed: bool, detail: str, cfg) -> tuple[bool, str]:
     try:
         decided = decide(gate, context, overrides)
     except Exception as exc:
+        if "optional cel-python" in str(exc):
+            return bool(passed), detail
         return False, f"{gate}: CEL policy failed: {exc}"
     return decided, detail

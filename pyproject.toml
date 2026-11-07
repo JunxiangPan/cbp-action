@@ -23,6 +23,7 @@ cbp = "cbp.cli:main"
 policy = ["cel-python>=0.5.0"]
 test = [
   "pytest>=8.0",
+  "cel-python>=0.5.0",
   "coverage>=7.6",
 ]
 
