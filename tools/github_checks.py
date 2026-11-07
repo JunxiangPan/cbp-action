@@ -10,6 +10,23 @@ import sys
 import urllib.request
 
 LINE = re.compile(r"^([a-z]+): (PASS|FAIL|SKIPPED)", re.IGNORECASE)
+ANNOTATION = re.compile(r"^(?P<path>[^:]+):(?P<line>\d+):\s*(?P<message>.+)$")
+
+
+def annotations(detail: str) -> list[dict]:
+    """Convert path:line findings into GitHub check-run annotations."""
+    result = []
+    for line in detail.splitlines():
+        match = ANNOTATION.match(line.strip())
+        if match:
+            result.append({
+                "path": match.group("path").replace("\\", "/"),
+                "start_line": max(1, int(match.group("line"))),
+                "end_line": max(1, int(match.group("line"))),
+                "annotation_level": "failure",
+                "message": match.group("message")[:65000],
+            })
+    return result[:50]
 
 
 def parse_gates(output: str) -> list[tuple[str, str]]:
@@ -29,7 +46,7 @@ def post(repo: str, sha: str, token: str, gate: str, status: str, detail: str) -
         "head_sha": sha,
         "status": "completed",
         "conclusion": conclusion,
-        "output": {"title": gate, "summary": detail[:60000]},
+        "output": {"title": gate, "summary": detail[:60000], "annotations": annotations(detail)},
     }).encode("utf-8")
     request = urllib.request.Request(
         f"https://api.github.com/repos/{repo}/check-runs",
