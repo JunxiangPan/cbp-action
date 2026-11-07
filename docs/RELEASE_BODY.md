@@ -56,3 +56,4 @@ This release contains P0 fixes and VM-driven guards only: source-hash coverage,
 baseline suppression, PowerShell AST parsing, required-artifact integrity,
 naked-subprocess rejection, and Python environment-path checks. P1/P2 items are
 deferred to v0.1.8.
+
