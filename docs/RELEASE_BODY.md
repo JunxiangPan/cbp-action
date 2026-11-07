@@ -1,6 +1,7 @@
-# CBP v1.0.5 — Release-evidence gate
+# CBP v1.0.6 — Release-evidence gate
 
-CBP v1.0.5 fixes the GitHub Action shell input boundary.
+This release body was generated from the built wheel by
+`tools/generate_release_body.py`; the wheel SHA256 is not hand-edited.
 
 ## Verification
 
@@ -10,21 +11,16 @@ All 9 gates are active.
 ```
 
 ```text
-cbp_action-1.0.5-py3-none-any.whl
-sha256: c6d2a8b2ea711855875cce54b0ac2548937f7145bcee95a09066e15e421798a2
+cbp_action-1.0.6-py3-none-any.whl
+sha256: 08ea9c3a2ee94e07e1c2768b48633ecc8adbfa89692f5d1e71ddf3785fab264e
 ```
 
-https://pypi.org/project/cbp-action/1.0.5/
+https://pypi.org/project/cbp-action/1.0.6/
 
-## What changed
+## Release boundary
 
-- All `${{ inputs.* }}` values are passed through `env`; run blocks reference quoted environment variables.
-- Release `ci_run_id` is digit-whitelisted and `release_tag` is semantic-version-whitelisted.
-- Permissions are declared per job; only the publish job gets write/OIDC/attestation scope.
-- Static E2E tests fail if a future run block interpolates untrusted inputs.
-- Release asset inventory is mandatory: missing `RELEASE_ASSETS.sha256` exits 2.
+Section A: input boundaries, release body generation, tag whitelist, and
+asset inventory verification are blocking gates.
 
-## Erratum for v1.0.4
-
-v1.0.4 still interpolated `${{ inputs.* }}` inside shell run blocks. Its asset
-checks were valid, but the action input boundary was not. v1.0.5 fixes that.
+Section B: AI audit gates are non-blocking and reported separately when
+enabled.

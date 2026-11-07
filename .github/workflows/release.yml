@@ -24,6 +24,14 @@ jobs:
         run: |
           echo "allow_placeholders is not permitted in GitHub Actions" >&2
           exit 1
+      - name: Validate release tag
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          case "$RELEASE_TAG" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "invalid release_tag" >&2; exit 2;;
+          esac
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: refs/tags/${{ inputs.release_tag }}
@@ -70,6 +78,14 @@ jobs:
       id-token: write
       attestations: write
     steps:
+      - name: Validate release tag
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          case "$RELEASE_TAG" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "invalid release_tag" >&2; exit 2;;
+          esac
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: refs/tags/${{ inputs.release_tag }}
@@ -98,6 +114,11 @@ jobs:
             dist/*.whl
             artifact/quality-manifest.json
             artifact/quality-manifest.json.sha256
+      - name: Generate release body from built wheel
+        env:
+          RELEASE_VERSION: ${{ inputs.release_tag }}
+        run: |
+          python tools/generate_release_body.py --wheel dist/*.whl --version "$RELEASE_VERSION" --notes artifact/docs/RELEASE_NOTES.generated.md --output dist/RELEASE_BODY.md
       - name: Generate release asset manifest
         run: |
           cd dist
@@ -109,7 +130,7 @@ jobs:
         run: |
           case "$RELEASE_TAG" in (v[0-9]*.[0-9]*.[0-9]*) ;; (*) echo "invalid release_tag" >&2; exit 2;; esac
           test -f artifact/docs/RELEASE_NOTES.generated.md
-          gh release create "$RELEASE_TAG" dist/*.whl dist/*.tar.gz dist/RELEASE_ASSETS.sha256 artifact/quality-manifest.json artifact/quality-manifest.json.sha256 artifact/docs/RELEASE_NOTES.generated.md --notes-file "$GITHUB_WORKSPACE/docs/RELEASE_BODY.md"
+          gh release create "$RELEASE_TAG" dist/*.whl dist/*.tar.gz dist/RELEASE_ASSETS.sha256 artifact/quality-manifest.json artifact/quality-manifest.json.sha256 artifact/docs/RELEASE_NOTES.generated.md --notes-file dist/RELEASE_BODY.md
       - name: Verify published release body and asset inventory
         env:
           GH_TOKEN: ${{ github.token }}
@@ -122,6 +143,14 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Validate release tag
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          case "$RELEASE_TAG" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "invalid release_tag" >&2; exit 2;;
+          esac
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: refs/tags/${{ inputs.release_tag }}
