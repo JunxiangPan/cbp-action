@@ -4,7 +4,7 @@ Prove the green build was not faked.
 
 CBP v1.0.0 is the first stable release. It is not an AI-code detector; it is a
 release-evidence gate for encoding, coverage, dependencies, comments, docs,
-claims, binaries, custom rules, and upgrades.
+claims, binaries, custom rules, and upgrades. All 9 gates are active.
 
 ## What is in 1.0.0
 
