@@ -68,6 +68,20 @@ def _policy_test(argv: list[str]) -> int:
     return 0 if passed else 1
 
 
+def _changed_files(root: Path, ref: str) -> set[str]:
+    """Return repository-relative paths changed since a git ref."""
+    import subprocess
+
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(root), "diff", "--name-only", ref],
+            capture_output=True, text=True, timeout=20, check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return set()
+    return {line.strip().replace("\\", "/") for line in completed.stdout.splitlines() if line.strip()}
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run enabled CBP gates and return a process exit code."""
     if argv is None:

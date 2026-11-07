@@ -167,6 +167,15 @@
         "python",
         "cel"
       ]
+    },
+    "release_version": {
+      "type": "string"
+    },
+    "release_artifact": {
+      "type": "string"
+    },
+    "pypi_project": {
+      "type": "string"
     }
   },
   "additionalProperties": false,

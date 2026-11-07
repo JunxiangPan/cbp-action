@@ -45,3 +45,28 @@ def test_packs_only_repository_triggers_custom_gate(tmp_path: Path) -> None:
     assert result.returncode == 1
     assert "custom: FAIL" in result.stdout
     assert "pack hit" in result.stdout
+
+
+def test_claims_rejects_wrong_release_version_from_cli(tmp_path: Path) -> None:
+    import hashlib
+    wheel = tmp_path / "cbp_action-9.9.9-py3-none-any.whl"
+    wheel.write_bytes(b"wheel")
+    digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
+    (tmp_path / "quality-manifest.json").write_text(json.dumps({"counts": {"passed": 1, "total": 1}}), encoding="utf-8")
+    (tmp_path / "notes.md").write_text("QUALITY_COUNTS: 1/1\n", encoding="utf-8")
+    (tmp_path / "body.md").write_text(
+        "All 1 gates are active.\nQUALITY_COUNTS: 1/1\n"
+        "wrong version v9.9.9\n" + digest + "\n"
+        "https://pypi.org/project/cbp-action/9.9.9/\n", encoding="utf-8")
+    (tmp_path / "cbp.json").write_text(json.dumps({
+        "schema_version": "1.0.1", "enable_claims": True,
+        "claims_manifest": "quality-manifest.json", "claims_notes": "notes.md",
+        "release_body": "body.md", "release_version": "1.0.2",
+        "release_artifact": wheel.name, "pypi_project": "cbp-action",
+        "enable_encoding": False, "enable_coverage": False, "enable_dependency": False,
+        "enable_comments": False, "enable_docs": False, "enable_custom": False,
+        "enable_upgrade": False, "enable_binary": False,
+    }), encoding="utf-8")
+    result = _run(["--root", str(tmp_path)], tmp_path)
+    assert result.returncode == 1
+    assert "must name version 1.0.2" in result.stdout

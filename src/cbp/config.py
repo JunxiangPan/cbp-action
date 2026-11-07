@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 
-SCHEMA_VERSION = "1.0.1"
+SCHEMA_VERSION = "1.0.2"
 LEGACY_FIELDS = {
     "installer_core": "install_command",
     "broker_files": "target_files",
@@ -67,6 +67,9 @@ class GateConfig:
     claims_manifest: Path | None = None
     claims_notes: Path | None = None
     release_body: Path | str = ""
+    release_version: str = ""
+    release_artifact: Path | str = ""
+    pypi_project: str = ""
     baseline: Path | str = ""
     coverage_signature: Path | str = ""
     require_coverage_signature: bool = False

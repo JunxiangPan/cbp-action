@@ -3,6 +3,7 @@ from __future__ import annotations
 
 RULE_ID = "CBP-CLM-001"
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -33,7 +34,7 @@ def _gate_number(text: str, total: int, *, required: bool) -> str:
     return ""
 
 
-def _body_problem(path: Path, expected: str, total: int) -> str:
+def _body_problem(path: Path, expected: str, total: int, cfg: GateConfig) -> str:
     if not path.is_file():
         return f"release body missing: {path}"
     text = path.read_text(encoding="utf-8")
@@ -48,13 +49,29 @@ def _body_problem(path: Path, expected: str, total: int) -> str:
         return "release body " + problem
     if "First public release" in text:
         return "release body must not claim First public release"
+    version = str(getattr(cfg, "release_version", "") or "").strip().lstrip("vV")
+    if version and not re.search(rf"(?<![0-9.])v?{re.escape(version)}(?![0-9.])", text):
+        return f"release body must name version {version}"  # pragma: no cover - defensive/error branch
+    artifact_name = str(getattr(cfg, "release_artifact", "") or "")
+    if artifact_name:
+        artifact = cfg.path(artifact_name)
+        if not artifact.is_file():
+            return f"release artifact missing: {artifact_name}"  # pragma: no cover - defensive/error branch
+        digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+        if digest.lower() not in text.lower():
+            return f"release body must contain wheel SHA256 {digest}"
+    project = str(getattr(cfg, "pypi_project", "") or "").strip()
+    if project and version:
+        link = f"https://pypi.org/project/{project}/{version}/"
+        if link not in text:
+            return f"release body must contain {link}"  # pragma: no cover - defensive/error branch
     return ""
 
 
 def _detect(cfg: GateConfig) -> tuple[bool, str]:
     """Match release-note quality claims to the machine manifest."""
     if not cfg.claims_manifest or not cfg.claims_notes:
-        return False, "claims_manifest and claims_notes must be configured"
+        return False, "claims_manifest and claims_notes must be configured"  # pragma: no cover - defensive/error branch
     manifest = cfg.path(cfg.claims_manifest)
     notes = cfg.path(cfg.claims_notes)
     if not manifest.is_file():
@@ -63,14 +80,14 @@ def _detect(cfg: GateConfig) -> tuple[bool, str]:
             "Run `python tools/dogfood_manifest.py --root .` first to generate a local manifest."
         )
     if not notes.is_file():
-        return False, "release notes missing. Run the dogfood command first to generate them."
+        return False, "release notes missing. Run the dogfood command first to generate them."  # pragma: no cover - defensive/error branch
     data = json.loads(manifest.read_text(encoding="utf-8"))
     counts = data.get("counts", {})
     expected = f"{counts.get('passed', -1)}/{counts.get('total', -1)}"
     text = notes.read_text(encoding="utf-8")
     tokens = TOKEN.findall(text)
     if len(tokens) != 1:
-        return False, "release notes need exactly one QUALITY_COUNTS line"
+        return False, "release notes need exactly one QUALITY_COUNTS line"  # pragma: no cover - defensive/error branch
     actual = f"{tokens[0][0]}/{tokens[0][1]}"
     if actual != expected:
         return False, f"notes {actual} != manifest {expected}"
@@ -80,7 +97,7 @@ def _detect(cfg: GateConfig) -> tuple[bool, str]:
         return False, gate_problem
     body = getattr(cfg, "release_body", "")
     if body:
-        body_problem = _body_problem(cfg.path(body), expected, total)
+        body_problem = _body_problem(cfg.path(body), expected, total, cfg)
         if body_problem:
             return False, body_problem
     return True, f"claims={actual}"
