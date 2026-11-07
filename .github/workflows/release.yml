@@ -12,14 +12,12 @@ on:
         description: Explicitly allow unresolved GitHub placeholder strings
         type: boolean
         default: false
-permissions:
-  contents: write
-  actions: read
-  id-token: write
-  attestations: write
 jobs:
   verify-artifact:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     steps:
       - name: Reject placeholder bypass in GitHub Actions
         if: ${{ inputs.allow_placeholders == true }}
@@ -37,16 +35,21 @@ jobs:
       - name: Download manifest artifact by explicit run id
         env:
           GH_TOKEN: ${{ github.token }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
         run: |
-          test -n "${{ inputs.ci_run_id }}"
-          gh run download "${{ inputs.ci_run_id }}" -n "quality-manifest-${{ inputs.ci_run_id }}" -D artifact
+          case "$CI_RUN_ID" in (*[!0-9]*|'') echo "invalid ci_run_id" >&2; exit 2;; esac
+          gh run download "$CI_RUN_ID" -n "quality-manifest-$CI_RUN_ID" -D artifact
       - name: Verify manifest hash, run id, commit, and notes
+        env:
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
         run: |
-          python tools/verify_manifest_artifact.py --manifest=artifact/quality-manifest.json --hash=artifact/quality-manifest.json.sha256 --notes=artifact/docs/RELEASE_NOTES.generated.md --run-id="${{ inputs.ci_run_id }}" --commit-sha="$(git rev-parse HEAD)"
+          python tools/verify_manifest_artifact.py --manifest=artifact/quality-manifest.json --hash=artifact/quality-manifest.json.sha256 --notes=artifact/docs/RELEASE_NOTES.generated.md --run-id="$CI_RUN_ID" --commit-sha="$(git rev-parse HEAD)"
       - name: Required artifact integrity gate
         if: inputs.package-zip != ''
+        env:
+          PACKAGE_ZIP: ${{ inputs.package-zip }}
         run: |
-          python -m cbp.cli --root "$GITHUB_WORKSPACE" --package-zip "${{ inputs.package-zip }}" --mode enforce
+          python -m cbp.cli --root "$GITHUB_WORKSPACE" --package-zip "$PACKAGE_ZIP" --mode enforce
       - name: Check Action metadata files
         run: |
           pwd
@@ -61,6 +64,11 @@ jobs:
   publish:
     needs: verify-artifact
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -80,8 +88,9 @@ jobs:
       - name: Download verified artifact again
         env:
           GH_TOKEN: ${{ github.token }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
         run: |
-          gh run download "${{ inputs.ci_run_id }}" -n "quality-manifest-${{ inputs.ci_run_id }}" -D artifact
+          gh run download "$CI_RUN_ID" -n "quality-manifest-$CI_RUN_ID" -D artifact
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018
         with:
@@ -96,14 +105,16 @@ jobs:
       - name: Publish release from the generated notes
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
+          case "$RELEASE_TAG" in (v[0-9]*.[0-9]*.[0-9]*) ;; (*) echo "invalid release_tag" >&2; exit 2;; esac
           test -f artifact/docs/RELEASE_NOTES.generated.md
-          gh release create "${{ inputs.release_tag }}" dist/*.whl dist/*.tar.gz dist/RELEASE_ASSETS.sha256 artifact/quality-manifest.json artifact/quality-manifest.json.sha256 artifact/docs/RELEASE_NOTES.generated.md --notes-file "$GITHUB_WORKSPACE/docs/RELEASE_BODY.md"
+          gh release create "$RELEASE_TAG" dist/*.whl dist/*.tar.gz dist/RELEASE_ASSETS.sha256 artifact/quality-manifest.json artifact/quality-manifest.json.sha256 artifact/docs/RELEASE_NOTES.generated.md --notes-file "$GITHUB_WORKSPACE/docs/RELEASE_BODY.md"
       - name: Verify published release body and asset inventory
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python -m cbp.cli --root "$GITHUB_WORKSPACE" --verify-release "${{ inputs.release_tag }}" --repository "$GITHUB_REPOSITORY"
+          python -m cbp.cli --root "$GITHUB_WORKSPACE" --verify-release "$RELEASE_TAG" --repository "$GITHUB_REPOSITORY"
 
   clean-verify:
     needs: publish
@@ -123,7 +134,9 @@ jobs:
       - name: Download asset manifest and verify body + assets
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
+          case "$RELEASE_TAG" in (v[0-9]*.[0-9]*.[0-9]*) ;; (*) echo "invalid release_tag" >&2; exit 2;; esac
           mkdir -p dist
-          gh release download "${{ inputs.release_tag }}" -R "$GITHUB_REPOSITORY" -p RELEASE_ASSETS.sha256 -D dist --clobber
-          python -m cbp.cli --root "$GITHUB_WORKSPACE" --verify-release "${{ inputs.release_tag }}" --repository "$GITHUB_REPOSITORY"
+          gh release download "$RELEASE_TAG" -R "$GITHUB_REPOSITORY" -p RELEASE_ASSETS.sha256 -D dist --clobber
+          python -m cbp.cli --root "$GITHUB_WORKSPACE" --verify-release "$RELEASE_TAG" --repository "$GITHUB_REPOSITORY"

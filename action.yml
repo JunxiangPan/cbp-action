@@ -90,38 +90,69 @@ runs:
   steps:
     - id: cbp
       shell: bash
+      env:
+        CBP_ROOT: ${{ inputs.root }}
+        CBP_CONFIG: ${{ inputs.config }}
+        CBP_COVERAGE_JSON: ${{ inputs.coverage-json }}
+        CBP_COVERAGE_ALLOWLIST: ${{ inputs.coverage-allowlist }}
+        CBP_COVERAGE_SIGNATURE: ${{ inputs.coverage-signature }}
+        CBP_REQUIRE_COVERAGE_SIGNATURE: ${{ inputs.require-coverage-signature }}
+        CBP_COVERAGE_THRESHOLD: ${{ inputs.coverage-threshold }}
+        CBP_POLICY_COVERAGE_THRESHOLD: ${{ inputs.policy-coverage-threshold }}
+        CBP_DEPENDENCY_LOCK: ${{ inputs.dependency-lock }}
+        CBP_INSTALL_COMMAND: ${{ inputs.install-command || inputs.installer-core }}
+        CBP_DOCS_MANIFEST: ${{ inputs.docs-manifest }}
+        CBP_BINARY_ARTIFACTS: ${{ inputs.binary-artifacts }}
+        CBP_PACKAGE_ZIP: ${{ inputs.package-zip }}
+        CBP_CLAIMS_MANIFEST: ${{ inputs.claims-manifest }}
+        CBP_CLAIMS_NOTES: ${{ inputs.claims-notes }}
+        CBP_RELEASE_BODY: ${{ inputs.release-body }}
+        CBP_SARIF_OUTPUT: ${{ inputs.sarif-output }}
+        CBP_BASELINE: ${{ inputs.baseline }}
+        CBP_ENABLE_COVERAGE: ${{ inputs.enable-coverage }}
+        CBP_ENABLE_ENCODING: ${{ inputs.enable-encoding }}
+        CBP_ENABLE_DEPENDENCY: ${{ inputs.enable-dependency }}
+        CBP_ENABLE_COMMENTS: ${{ inputs.enable-comments }}
+        CBP_ENABLE_DOCS: ${{ inputs.enable-docs }}
+        CBP_ENABLE_BINARY: ${{ inputs.enable-binary }}
+        CBP_ENABLE_CLAIMS: ${{ inputs.enable-claims }}
+        CBP_ENABLE_CUSTOM: ${{ inputs.enable-custom }}
+        CBP_ENABLE_UPGRADE: ${{ inputs.enable-upgrade }}
+        CBP_MODE: ${{ inputs.mode }}
       run: |
-        cd "${{ github.action_path }}"
+        cd "${GITHUB_ACTION_PATH:?missing action path}"
         sha256sum -c dist/WHEEL_SHA256
-        python -m pip install --no-deps "dist/cbp_action-1.0.4-py3-none-any.whl" >/dev/null
+        python -m pip install --no-deps "dist/cbp_action-1.0.5-py3-none-any.whl" >/dev/null
         set +e
-        OUTPUT=$(python -m cbp.cli --root "${{ inputs.root }}" \
-          --coverage-json "${{ inputs.coverage-json }}" \
-          --coverage-allowlist "${{ inputs.coverage-allowlist }}" \
-          --coverage-signature "${{ inputs.coverage-signature }}" \
-          --require-coverage-signature "${{ inputs.require-coverage-signature }}" \
-          --coverage-threshold "${{ inputs.coverage-threshold }}" \
-          --policy-coverage-threshold "${{ inputs.policy-coverage-threshold }}" \
-          --dependency-lock "${{ inputs.dependency-lock }}" \
-          --install-command "${{ inputs.install-command || inputs.installer-core }}" \
-          --docs-manifest "${{ inputs.docs-manifest }}" \
-          --binary-artifacts "${{ inputs.binary-artifacts }}" \
-          --package-zip "${{ inputs.package-zip }}" \
-          --claims-manifest "${{ inputs.claims-manifest }}" \
-          --claims-notes "${{ inputs.claims-notes }}" \
-          --release-body "${{ inputs.release-body }}" \
-          --sarif-output "${{ inputs.sarif-output }}" \
-          --baseline "${{ inputs.baseline }}" \
-          --enable-coverage "${{ inputs.enable-coverage }}" \
-          --enable-encoding "${{ inputs.enable-encoding }}" \
-          --enable-dependency "${{ inputs.enable-dependency }}" \
-          --enable-comments "${{ inputs.enable-comments }}" \
-          --enable-docs "${{ inputs.enable-docs }}" \
-          --enable-binary "${{ inputs.enable-binary }}" \
-          --enable-claims "${{ inputs.enable-claims }}" \
-          --enable-custom "${{ inputs.enable-custom }}" \
-          --enable-upgrade "${{ inputs.enable-upgrade }}" \
-          --mode "${{ inputs.mode }}" 2>&1)
+        OUTPUT=$(python -m cbp.cli \
+          --root "$CBP_ROOT" \
+          --config "$CBP_CONFIG" \
+          --coverage-json "$CBP_COVERAGE_JSON" \
+          --coverage-allowlist "$CBP_COVERAGE_ALLOWLIST" \
+          --coverage-signature "$CBP_COVERAGE_SIGNATURE" \
+          --require-coverage-signature "$CBP_REQUIRE_COVERAGE_SIGNATURE" \
+          --coverage-threshold "$CBP_COVERAGE_THRESHOLD" \
+          --policy-coverage-threshold "$CBP_POLICY_COVERAGE_THRESHOLD" \
+          --dependency-lock "$CBP_DEPENDENCY_LOCK" \
+          --install-command "$CBP_INSTALL_COMMAND" \
+          --docs-manifest "$CBP_DOCS_MANIFEST" \
+          --binary-artifacts "$CBP_BINARY_ARTIFACTS" \
+          --package-zip "$CBP_PACKAGE_ZIP" \
+          --claims-manifest "$CBP_CLAIMS_MANIFEST" \
+          --claims-notes "$CBP_CLAIMS_NOTES" \
+          --release-body "$CBP_RELEASE_BODY" \
+          --sarif-output "$CBP_SARIF_OUTPUT" \
+          --baseline "$CBP_BASELINE" \
+          --enable-coverage "$CBP_ENABLE_COVERAGE" \
+          --enable-encoding "$CBP_ENABLE_ENCODING" \
+          --enable-dependency "$CBP_ENABLE_DEPENDENCY" \
+          --enable-comments "$CBP_ENABLE_COMMENTS" \
+          --enable-docs "$CBP_ENABLE_DOCS" \
+          --enable-binary "$CBP_ENABLE_BINARY" \
+          --enable-claims "$CBP_ENABLE_CLAIMS" \
+          --enable-custom "$CBP_ENABLE_CUSTOM" \
+          --enable-upgrade "$CBP_ENABLE_UPGRADE" \
+          --mode "$CBP_MODE" 2>&1)
         CODE=$?
         echo "$OUTPUT"
         echo "$OUTPUT" | grep -E '^CBP_RESULT=' | tail -1 >> "$GITHUB_OUTPUT"
