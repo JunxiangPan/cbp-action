@@ -144,6 +144,10 @@
     },
     "baseline": {
       "type": "string"
+    },
+    "required_artifacts": {
+      "type": "array",
+      "description": "Required when package_zip is configured."
     }
   },
   "additionalProperties": false,

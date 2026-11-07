@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 
-SCHEMA_VERSION = "0.1.4"
+SCHEMA_VERSION = "0.1.6"
 LEGACY_FIELDS = {
     "installer_core": "install_command",
     "broker_files": "target_files",
@@ -33,6 +33,7 @@ class GateConfig:
     dependency_lock: Path | str = ""
     install_command: Path | str = ""
     custom_rules: tuple[dict, ...] = ()
+    required_artifacts: tuple[object, ...] = ()
     evidence_readers: dict = field(default_factory=dict)
     upgrade_script: str = ""
     upgrade_fixtures: tuple[str, ...] = ()

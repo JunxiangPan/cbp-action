@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 from .config import GateConfig
-from . import readers
+from . import artifact_integrity, readers, powershell_syntax
 
 RULE_ID = "CBP-CST-001"
 SKIP_PARTS = {".git", ".venv", "venv", "__pycache__", "node_modules", "wheelhouse"}
@@ -36,6 +36,14 @@ def run(cfg: GateConfig) -> tuple[bool, str]:
     rules = getattr(cfg, "custom_rules", ()) or ()
     findings: list[str] = []
     enforced = False
+    integrity = artifact_integrity.check(cfg)
+    if integrity:
+        findings.extend(integrity)
+        enforced = True
+    ps_ok, ps_detail = powershell_syntax.check(cfg.root)
+    if not ps_ok:
+        findings.append(ps_detail)
+        enforced = True
     for index, rule in enumerate(rules):
         if not isinstance(rule, dict):
             return False, f"custom rule {index} must be an object"
@@ -77,6 +85,13 @@ def run(cfg: GateConfig) -> tuple[bool, str]:
             matcher = re.compile(expression, flags)
         except re.error as exc:
             return False, f"custom rule {name} has invalid regex: {exc}"
+        required = rule.get("required_pattern", "")
+        required_matcher = None
+        if required:
+            try:
+                required_matcher = re.compile(required, flags)
+            except re.error as exc:
+                return False, f"custom rule {name} has invalid required_pattern: {exc}"
         limit = int(rule.get("max_matches", 100))
         count = 0
         for path in _files(cfg, files, rule.get("exclude", [])):
@@ -89,6 +104,11 @@ def run(cfg: GateConfig) -> tuple[bool, str]:
                 findings.append(f"{path.relative_to(cfg.root).as_posix()}:1: [{rule_id}] unreadable: {error}")
                 count += 1
                 continue
+            if required_matcher is not None:
+                if required_matcher.search(text) is None:
+                    findings.append(f"{path.relative_to(cfg.root).as_posix()}:1: [{rule_id}] {message} (required pattern missing)")
+                    count += 1
+                continue
             for match in matcher.finditer(text):
                 line = text.count("\n", 0, match.start()) + 1
                 findings.append(f"{path.relative_to(cfg.root).as_posix()}:{line}: [{rule_id}] {message}")
@@ -99,8 +119,8 @@ def run(cfg: GateConfig) -> tuple[bool, str]:
                 break
         if count and mode == "enforce":
             enforced = True
-    if not rules:
-        return True, "custom=0 rules"
+    if not rules and not findings:
+        return True, "custom=0 rules; " + ps_detail
     if findings:
         prefix = "custom=FAIL" if enforced else "custom=WARN"
         return (not enforced), prefix + " " + "\n".join(findings)

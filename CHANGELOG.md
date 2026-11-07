@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.6 — 2026-11-07
+
+- Added ambiguous Windows-backslash path detection in .py/.ps1 files.
+- Made required_artifacts mandatory whenever package_zip is configured.
+- Documented that administrator/VM chaos tests are not proven by CI.
+- Kept lcov/cobertura, Action SHA pinning, and ReDoS work deferred to P1/P2.
+
+## 0.1.5 — 2026-11-07
+
+- Added a built-in PowerShell AST syntax gate inside the custom gate.
+- Added required-pattern support for CBP custom rules.
+- Rejects malformed .ps1 files before deployment.
+- Added required-artifact ZIP integrity, naked-subprocess, and Python PYTHONPATH checks.
+- Fixed CBS journal status binding by rejecting the invalid warning status.
+
 ## 0.1.4 — 2026-11-07
 
 - Added source-hash binding for coverage evidence; `touch` no longer bypasses freshness.
@@ -52,3 +67,6 @@ This release turns those lessons into reusable gates:
 - `audit` and `enforce` modes
 - GitHub Action and local CLI entry points
 - Linux and Windows self-tests
+### Scope
+
+v0.1.5 is a P0/VM-guard release. P1/P2 items are deferred to v0.1.6.

@@ -16,7 +16,7 @@ def _cfg(tmp_path: Path, rules: list[dict]) -> GateConfig:
 def test_no_rules_passes(tmp_path: Path) -> None:
     passed, detail = custom_rules.run(_cfg(tmp_path, []))
     assert passed is True
-    assert detail == "custom=0 rules"
+    assert detail.startswith("custom=0 rules")
 
 
 def test_literal_matching_and_exclude(tmp_path: Path) -> None:
@@ -64,3 +64,19 @@ def test_rule_respects_max_matches(tmp_path: Path) -> None:
     rule = {"name": "limit", "pattern": "x", "files": ["src/**/*.py"], "message": "hit", "max_matches": 1}
     passed, detail = custom_rules.run(_cfg(tmp_path, [rule]))
     assert passed is True and detail.count("hit") == 1
+
+
+def test_required_pattern_blocks_missing_contract(tmp_path: Path) -> None:
+    (tmp_path / "install.ps1").write_text("Write-Host installed\n", encoding="utf-8")
+    rule = {
+        "name": "assert-broker",
+        "pattern": "broker.py",
+        "required_pattern": "Test-Path .*broker.py",
+        "files": ["install.ps1"],
+        "message": "broker assertion missing",
+        "mode": "enforce",
+    }
+    passed, detail = custom_rules.run(_cfg(tmp_path, [rule]))
+    assert passed is False and "required pattern missing" in detail
+    (tmp_path / "install.ps1").write_text("if (-not (Test-Path (Join-Path $root 'broker.py'))) { throw 'x' }\n", encoding="utf-8")
+    assert custom_rules.run(_cfg(tmp_path, [rule]))[0] is True
