@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.0.1"
 LEGACY_FIELDS = {
     "installer_core": "install_command",
     "broker_files": "target_files",

@@ -143,7 +143,12 @@ def _detect(cfg: GateConfig) -> tuple[bool, str]:
             except cel_policy.CelPolicyError as exc:
                 return False, f"custom rule {name}: {exc}"
             if hit:
-                findings.append(f"{next(iter(texts), '<none>')}:1: [{rule_id}] {message}")
+                match_path = next(
+                    (path for path, text in texts.items()
+                     if cel_policy.evaluate(str(rule["cel"]), {path: text})),
+                    next(iter(texts), "<none>"),
+                )
+                findings.append(f"{match_path}:1: [{rule_id}] {message}")
                 if mode == "enforce":
                     enforced = True
             continue

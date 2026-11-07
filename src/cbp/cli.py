@@ -46,12 +46,26 @@ def _configured(name: str, cfg) -> bool:
     if name == "claims":
         return bool(getattr(cfg, "claims_manifest", None) or getattr(cfg, "claims_notes", None))
     if name == "custom":
-        return bool(getattr(cfg, "custom_rules", ()))
+        return bool(getattr(cfg, "custom_rules", ()) or getattr(cfg, "packs", ()))
     if name == "upgrade":
         return bool(getattr(cfg, "upgrade_script", "") or getattr(cfg, "upgrade_fixtures", ()))
     if name == "binary":
         return bool(getattr(cfg, "binary_artifacts", ""))
     return True
+
+
+def _policy_test(argv: list[str]) -> int:
+    """Run a CEL policy fixture file from the CLI."""
+    parser = argparse.ArgumentParser(prog="cbp policy test")
+    parser.add_argument("fixtures")
+    args = parser.parse_args(argv)
+    from .policy_test import run_fixture
+
+    passed, failures = run_fixture(Path(args.fixtures))
+    for failure in failures:
+        print("POLICY_FAIL " + failure)
+    print("POLICY_TEST=" + ("PASS" if passed else "FAIL"))
+    return 0 if passed else 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -60,6 +74,8 @@ def main(argv: list[str] | None = None) -> int:
         argv = __import__("sys").argv[1:]
     if argv and argv[0] == "init":
         return _init(argv[1:])
+    if argv and argv[:2] == ["policy", "test"]:
+        return _policy_test(argv[2:])
     parser = argparse.ArgumentParser(prog="cbp")
     parser.add_argument("--root", default=".")
     parser.add_argument("--config", default="")
