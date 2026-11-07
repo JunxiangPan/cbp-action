@@ -29,9 +29,17 @@ def run(count: int) -> float:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--counts", default="1000,5000,20000")
+    parser.add_argument("--baseline", default="benchmark-baseline.json")
     args = parser.parse_args()
     result = {str(count): run(int(count)) for count in args.counts.split(",")}
     print(json.dumps(result, indent=2))
+    baseline_path = Path(args.baseline)
+    if baseline_path.is_file():
+        baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+        failed = [name for name, seconds in result.items() if seconds > float(baseline.get(name, 0)) * 1.2]
+        if failed:
+            print("BENCHMARK_REGRESSION " + ",".join(failed))
+            return 1
     return 0
 
 

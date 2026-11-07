@@ -176,7 +176,7 @@ def main(argv: list[str] | None = None) -> int:
                 passed = True
                 detail = "no findings on changed files"
             else:
-                detail = chr(10).join(kept)
+                detail = chr(10).join("[NEW] " + line for line in kept)
         return name, passed, detail, False
 
     if args.jobs > 1:
