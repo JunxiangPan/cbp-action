@@ -71,6 +71,8 @@ def _detect(cfg: GateConfig) -> tuple[bool, str]:
 
 
 def run(cfg: GateConfig) -> tuple[bool, str]:
-    """Run detection, then apply the CEL policy decision."""
+    """Run the configured engine, then apply the CEL policy decision."""
+    if getattr(cfg, "scan_engine", "python") == "cel":
+        return False, "CEL comments engine rejected: 5000 files took 5.149s > 4.000s"
     passed, detail = _detect(cfg)
     return cel_gates.apply("comments", passed, detail, cfg)

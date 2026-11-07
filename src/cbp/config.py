@@ -39,6 +39,7 @@ class GateConfig:
     cel_policies: dict = field(default_factory=dict)
     cache_file: Path | str = ""
     enable_deep_scan: bool = False
+    scan_engine: str = "python"
     ast_max_bytes: int = 1_000_000
     external_reports: tuple[str, ...] = ()
     required_artifacts: tuple[object, ...] = ()

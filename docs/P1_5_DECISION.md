@@ -15,3 +15,15 @@ release:
 
 Decision: keep Python detection plus CEL policy decisions. This is an explicit
 engineering compromise, documented rather than hidden.
+
+## Comments CEL experiment result
+
+A 5,000-file CEL comment detector measured:
+
+```text
+count=5000 seconds=5.149 limit=4.000
+```
+
+This exceeded the 4-second red line. The CEL comments path is therefore
+disabled and reports an explicit rejection; the Python detector remains the
+only production engine. `scan_engine` defaults to `python`.

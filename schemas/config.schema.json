@@ -160,6 +160,13 @@
     },
     "external_reports": {
       "type": "array"
+    },
+    "scan_engine": {
+      "type": "string",
+      "enum": [
+        "python",
+        "cel"
+      ]
     }
   },
   "additionalProperties": false,
