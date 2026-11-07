@@ -30,6 +30,7 @@ jobs:
         run: |
           mkdir -p dist
           gh release download "$RELEASE_TAG" -R "$GITHUB_REPOSITORY" -p 'cbp_action-*' -D dist --clobber
+          rm -f dist/WHEEL_SHA256
           ls -l dist
       - name: Attest the exact PyPI artifacts
         uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018
