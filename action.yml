@@ -93,7 +93,7 @@ runs:
       run: |
         cd "${{ github.action_path }}"
         sha256sum -c dist/WHEEL_SHA256
-        python -m pip install --no-deps "dist/cbp_action-1.0.3-py3-none-any.whl" >/dev/null
+        python -m pip install --no-deps "dist/cbp_action-1.0.4-py3-none-any.whl" >/dev/null
         set +e
         OUTPUT=$(python -m cbp.cli --root "${{ inputs.root }}" \
           --coverage-json "${{ inputs.coverage-json }}" \

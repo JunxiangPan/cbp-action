@@ -37,8 +37,24 @@ def test_cli_verify_requires_repository(monkeypatch, capsys) -> None:
     assert "VERIFY_RELEASE_FAILED" in capsys.readouterr().out
 
 
-def test_cli_verify_uses_environment(monkeypatch) -> None:
+def test_cli_verify_uses_environment(tmp_path: Path, monkeypatch) -> None:
     from cbp import cli
+    import cbp.verify_release_assets as assets
+    (tmp_path / "dist").mkdir()
+    (tmp_path / "dist" / "RELEASE_ASSETS.sha256").write_text("", encoding="utf-8")
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "RELEASE_BODY.md").write_text("body", encoding="utf-8")
     monkeypatch.setenv("GITHUB_REPOSITORY", "owner/repo")
     monkeypatch.setattr(verify_release, "verify", lambda repository, tag, body, token: (True, "RELEASE_BODY_OK"))
-    assert cli.main(["--verify-release", "v1.0.0"]) == 0
+    monkeypatch.setattr(assets, "verify_from_manifest", lambda *args: (True, "RELEASE_ASSETS_OK"))
+    assert cli.main(["--root", str(tmp_path), "--verify-release", "v1.0.0"]) == 0
+
+
+def test_cli_verify_missing_asset_manifest_fails(tmp_path: Path, monkeypatch, capsys) -> None:
+    from cbp import cli
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "RELEASE_BODY.md").write_text("body", encoding="utf-8")
+    monkeypatch.setenv("GITHUB_REPOSITORY", "owner/repo")
+    monkeypatch.setattr(verify_release, "verify", lambda repository, tag, body, token: (True, "RELEASE_BODY_OK"))
+    assert cli.main(["--root", str(tmp_path), "--verify-release", "v1.0.0"]) == 2
+    assert "RELEASE_ASSETS.sha256 missing" in capsys.readouterr().err

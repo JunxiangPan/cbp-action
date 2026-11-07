@@ -56,6 +56,14 @@ def test_fetch_and_asset_digests_success(monkeypatch) -> None:
             return {"body": "hello", "assets": [{"name": "a.whl", "digest": "sha256:abc"}]}
     monkeypatch.setattr("requests.get", lambda *a, **k: Good())
     assert vr.fetch_release_body("o/r", "v1") == "hello"
+    class Response:
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return False
+        def read(self):
+            return b'{"assets":[{"name":"a.whl","digest":"sha256:abc"}]}'
+    monkeypatch.setattr(va, "urlopen", lambda *a, **k: Response())
     assert va.asset_digests("o/r", "v1") == {"a.whl": "abc"}
 
 
@@ -69,7 +77,7 @@ def test_verify_assets_success(tmp_path: Path, monkeypatch) -> None:
 def test_verify_from_manifest(tmp_path: Path, monkeypatch) -> None:
     manifest = tmp_path / "RELEASE_ASSETS.sha256"
     manifest.write_text("abc *a.whl\n", encoding="utf-8")
-    monkeypatch.setattr(va, "asset_digests", lambda *a, **k: {"a.whl": "abc"})
+    monkeypatch.setattr(va, "asset_digests", lambda *a, **k: {"a.whl": "abc", "RELEASE_ASSETS.sha256": "self"})
     assert va.verify_from_manifest(manifest, "o/r", "v1")[0] is True
-    monkeypatch.setattr(va, "asset_digests", lambda *a, **k: {"a.whl": "abc", "extra.md": "x"})
+    monkeypatch.setattr(va, "asset_digests", lambda *a, **k: {"a.whl": "abc", "RELEASE_ASSETS.sha256": "self", "extra.md": "x"})
     assert va.verify_from_manifest(manifest, "o/r", "v1")[0] is False

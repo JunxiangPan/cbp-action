@@ -89,17 +89,21 @@ jobs:
             dist/*.whl
             artifact/quality-manifest.json
             artifact/quality-manifest.json.sha256
+      - name: Generate release asset manifest
+        run: |
+          cd dist
+          sha256sum *.whl *.tar.gz             ../artifact/quality-manifest.json             ../artifact/quality-manifest.json.sha256             ../artifact/docs/RELEASE_NOTES.generated.md > RELEASE_ASSETS.sha256
       - name: Publish release from the generated notes
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           test -f artifact/docs/RELEASE_NOTES.generated.md
-          gh release create "${{ inputs.release_tag }}" dist/*.whl dist/*.tar.gz artifact/quality-manifest.json artifact/quality-manifest.json.sha256 artifact/docs/RELEASE_NOTES.generated.md --notes-file "$GITHUB_WORKSPACE/docs/RELEASE_BODY.md"
-      - name: Verify published release body
+          gh release create "${{ inputs.release_tag }}" dist/*.whl dist/*.tar.gz dist/RELEASE_ASSETS.sha256 artifact/quality-manifest.json artifact/quality-manifest.json.sha256 artifact/docs/RELEASE_NOTES.generated.md --notes-file "$GITHUB_WORKSPACE/docs/RELEASE_BODY.md"
+      - name: Verify published release body and asset inventory
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python -m cbp.cli --verify-release "${{ inputs.release_tag }}" --repository "$GITHUB_REPOSITORY"
+          python -m cbp.cli --root "$GITHUB_WORKSPACE" --verify-release "${{ inputs.release_tag }}" --repository "$GITHUB_REPOSITORY"
 
   clean-verify:
     needs: publish
@@ -116,8 +120,10 @@ jobs:
       - name: Install the released wheel on a clean runner
         run: |
           python -m pip install --no-deps "dist/*.whl" 2>/dev/null || python -m pip install .
-      - name: Verify the published Release body
+      - name: Download asset manifest and verify body + assets
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python -m cbp.cli --verify-release "${{ inputs.release_tag }}" --repository "$GITHUB_REPOSITORY"
+          mkdir -p dist
+          gh release download "${{ inputs.release_tag }}" -R "$GITHUB_REPOSITORY" -p RELEASE_ASSETS.sha256 -D dist --clobber
+          python -m cbp.cli --root "$GITHUB_WORKSPACE" --verify-release "${{ inputs.release_tag }}" --repository "$GITHUB_REPOSITORY"

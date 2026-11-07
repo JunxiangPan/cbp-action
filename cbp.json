@@ -105,7 +105,7 @@
       "encoding": "utf-8"
     }
   },
-  "schema_version": "1.0.3",
+  "schema_version": "1.0.4",
   "upgrade_fixtures": [
     "tests/fixtures/cbp_v0.1.0.json"
   ],
@@ -117,7 +117,7 @@
   "coverage_ratchet": "coverage-ratchet.json",
   "rules_manifest": "rules/rules.sha256",
   "rules_changelog_manifest": "rules/changelog.sha256",
-  "release_version": "1.0.3",
-  "release_artifact": "dist/cbp_action-1.0.3-py3-none-any.whl",
+  "release_version": "1.0.4",
+  "release_artifact": "dist/cbp_action-1.0.4-py3-none-any.whl",
   "pypi_project": "cbp-action"
 }

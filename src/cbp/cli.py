@@ -139,14 +139,16 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
         if not ok:
             return 1
         asset_manifest = Path(args.root) / "dist" / "RELEASE_ASSETS.sha256"
-        if asset_manifest.is_file():
-            from .verify_release_assets import verify_from_manifest
-            assets_ok, assets_detail = verify_from_manifest(
-                asset_manifest, repository, args.verify_release, verify_release.token_from_env()
-            )
-            print(assets_detail)
-            if not assets_ok:
-                return 1
+        if not asset_manifest.is_file():
+            print("FAIL: RELEASE_ASSETS.sha256 missing; asset verification cannot run", file=sys.stderr)
+            return 2
+        from .verify_release_assets import verify_from_manifest
+        assets_ok, assets_detail = verify_from_manifest(
+            asset_manifest, repository, args.verify_release, verify_release.token_from_env()
+        )
+        print(assets_detail)
+        if not assets_ok:
+            return 3
         return 0
     config_path = Path(args.config) if args.config else Path(args.root) / "cbp.json"
     if not args.config and not config_path.is_file():
