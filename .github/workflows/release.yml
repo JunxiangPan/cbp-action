@@ -134,6 +134,7 @@ jobs:
       - name: Verify published release body and asset inventory
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           python -m cbp.cli --root "$GITHUB_WORKSPACE" --verify-release "$RELEASE_TAG" --repository "$GITHUB_REPOSITORY"
 
