@@ -49,7 +49,7 @@ def _cache_state(cfg: GateConfig, rules, previous: dict | None = None) -> tuple[
     for base, dirs, names in os.walk(cfg.root):
         dirs[:] = [name for name in dirs if name not in SKIP_PARTS]
         for name in names:
-            if name in SKIP_PARTS or name == ".cache.json":
+            if name in SKIP_PARTS or name.endswith("cache.json"):
                 continue
             path = Path(base) / name
             relative = path.relative_to(cfg.root).as_posix()
