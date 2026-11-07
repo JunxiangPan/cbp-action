@@ -1,5 +1,7 @@
 # CBP — Release-evidence gate
 
+[![Reference Implementation: CBS](https://img.shields.io/badge/Reference%20Implementation-CBS-2B579A)](https://github.com/JunxiangPan/Cyber-Butler-Security)
+
 > Prove the green build was not faked.
 
 A reusable, self-hosted quality gate for repositories that do not want to

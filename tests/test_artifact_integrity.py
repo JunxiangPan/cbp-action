@@ -27,3 +27,20 @@ def test_pythonpath_must_include_tools(tmp_path: Path, monkeypatch) -> None:
     (tmp_path / "start.bat").write_text('set "PYTHONPATH=C:\CyberButler"\n', encoding="utf-8")
     cfg = GateConfig(root=tmp_path)
     assert any("PYTHONPATH must include tools" in item for item in artifact_integrity.check(cfg))
+
+
+def test_required_pattern_invalid_regex_is_rejected(tmp_path: Path, monkeypatch) -> None:
+    from cbp import custom_rules
+    monkeypatch.setattr(custom_rules, "SKIP_PARTS", set())
+    (tmp_path / "install.ps1").write_text("Write-Host ok\n", encoding="utf-8")
+    rule = {
+        "name": "bad-required",
+        "pattern": "ok",
+        "required_pattern": "(",
+        "files": ["install.ps1"],
+        "message": "missing contract",
+        "mode": "enforce",
+    }
+    from cbp.config import GateConfig
+    passed, detail = custom_rules.run(GateConfig(root=tmp_path, custom_rules=(rule,)))
+    assert passed is False and "invalid required_pattern" in detail
