@@ -5,9 +5,11 @@ import re
 from pathlib import Path
 
 from .config import GateConfig
-from . import artifact_integrity, readers, powershell_syntax
+from . import artifact_integrity, readers, powershell_syntax, regex_guard
 
 RULE_ID = "CBP-CST-001"
+MAX_PATTERN_CHARS = 4096
+MAX_INPUT_BYTES = 2_000_000
 SKIP_PARTS = {".git", ".venv", "venv", "__pycache__", "node_modules", "wheelhouse"}
 
 
@@ -87,7 +89,13 @@ def run(cfg: GateConfig) -> tuple[bool, str]:
             return False, f"custom rule {name} has invalid regex: {exc}"
         required = rule.get("required_pattern", "")
         required_matcher = None
+        if len(pattern) > MAX_PATTERN_CHARS:
+            return False, f"custom rule {name} pattern exceeds {MAX_PATTERN_CHARS} characters"
+        if re.search(r"\([^)]*[+*][^)]*\)[+*{]", pattern):
+            return False, f"custom rule {name} contains a nested quantifier that can cause ReDoS"
         if required:
+            if len(required) > MAX_PATTERN_CHARS:
+                return False, f"custom rule {name} required_pattern is too long"
             try:
                 required_matcher = re.compile(required, flags)
             except re.error as exc:
@@ -102,6 +110,10 @@ def run(cfg: GateConfig) -> tuple[bool, str]:
             text, error = readers.read(path, reader)
             if error:
                 findings.append(f"{path.relative_to(cfg.root).as_posix()}:1: [{rule_id}] unreadable: {error}")
+                count += 1
+                continue
+            if len(text.encode("utf-8", errors="replace")) > MAX_INPUT_BYTES:
+                findings.append(f"{path.relative_to(cfg.root).as_posix()}:1: [{rule_id}] input exceeds ReDoS budget")
                 count += 1
                 continue
             if required_matcher is not None:
