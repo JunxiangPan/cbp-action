@@ -27,14 +27,34 @@ def fetch_release_body(repository: str, tag: str, token: str | None = None) -> s
     }
     if token:
         headers["Authorization"] = "Bearer " + token
-    request = urllib.request.Request(url, headers=headers)
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        raise RuntimeError(f"GitHub API HTTP {exc.code} for {repository}@{tag}") from exc
-    except urllib.error.URLError as exc:
-        raise RuntimeError(f"GitHub API unavailable: {exc.reason}") from exc
+        import certifi
+        import requests
+
+        response = requests.get(url, headers=headers, timeout=30, verify=certifi.where())
+        if response.status_code >= 400:
+            raise RuntimeError(f"GitHub API HTTP {response.status_code} for {repository}@{tag}")
+        payload = response.json()
+    except RuntimeError:
+        raise
+    except ImportError:
+        import ssl
+        context = ssl.create_default_context()
+        try:
+            import certifi
+            context.load_verify_locations(certifi.where())
+        except ImportError:
+            pass
+        request = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=30, context=context) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            raise RuntimeError(f"GitHub API HTTP {exc.code} for {repository}@{tag}") from exc
+        except urllib.error.URLError as exc:
+            raise RuntimeError(f"GitHub API unavailable: {exc.reason}") from exc
+    except Exception as exc:
+        raise RuntimeError(f"GitHub API unavailable: {exc}") from exc
     body = payload.get("body")
     if not isinstance(body, str):
         raise RuntimeError("GitHub release body is missing or is not a string")
