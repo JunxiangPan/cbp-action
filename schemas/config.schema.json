@@ -151,6 +151,15 @@
     },
     "packs": {
       "type": "array"
+    },
+    "enable_deep_scan": {
+      "type": "boolean"
+    },
+    "ast_max_bytes": {
+      "type": "integer"
+    },
+    "external_reports": {
+      "type": "array"
     }
   },
   "additionalProperties": false,

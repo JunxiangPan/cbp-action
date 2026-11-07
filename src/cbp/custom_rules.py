@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 from .config import GateConfig
-from . import artifact_integrity, cel_gates, cel_policy, packs as packs_module, readers, powershell_syntax, regex_guard
+from . import artifact_integrity, ast_engine, cel_gates, cel_policy, packs as packs_module, readers, powershell_syntax, regex_guard, report_aggregator
 
 RULE_ID = "CBP-CST-001"
 MAX_PATTERN_CHARS = 4096
@@ -93,6 +93,20 @@ def _detect(cfg: GateConfig) -> tuple[bool, str]:
     if integrity:
         findings.extend(integrity)
         enforced = True
+    if getattr(cfg, "enable_deep_scan", False):
+        for item in ast_engine.scan_root(cfg.root, int(getattr(cfg, "ast_max_bytes", 1_000_000))):
+            findings.append(f"{item['path']}:{item['line']}: [{item['rule']}] {item['message']}")
+            if item.get("severity") == "error":
+                enforced = True
+    for report in getattr(cfg, "external_reports", ()) or ():
+        try:
+            external = report_aggregator.aggregate(cfg.root, [str(report)])
+        except report_aggregator.ReportError as exc:
+            return False, f"external report failed: {exc}"
+        for item in external:
+            findings.append(f"{item['path']}:{item['line']}: [{item['rule']}] {item['message']}")
+            if str(item.get("severity", "")).lower() in {"error", "critical", "high", "blocker"}:
+                enforced = True
     ps_ok, ps_detail = powershell_syntax.check(cfg.root)
     if not ps_ok:
         findings.append(ps_detail)
