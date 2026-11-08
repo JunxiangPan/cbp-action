@@ -125,8 +125,9 @@ jobs:
       - name: Generate release body from built wheel
         env:
           RELEASE_VERSION: ${{ inputs.release_tag }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
         run: |
-          python tools/generate_release_body.py --wheel dist/*.whl --version "$RELEASE_VERSION" --notes artifact/docs/RELEASE_NOTES.generated.md --output dist/RELEASE_BODY.md
+          python tools/generate_release_body.py --wheel dist/*.whl --version "$RELEASE_VERSION" --notes artifact/docs/RELEASE_NOTES.generated.md --output dist/RELEASE_BODY.md --ci-run "$CI_RUN_ID"
       - name: Generate release asset manifest
         run: |
           cd dist

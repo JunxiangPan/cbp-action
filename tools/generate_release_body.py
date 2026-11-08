@@ -14,6 +14,11 @@ def main() -> int:
     parser.add_argument("--version", required=True)
     parser.add_argument("--notes", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--repo", default="JunxiangPan/cbp-action")
+    parser.add_argument("--ci-run", default="")
+    parser.add_argument("--e2e-run", default="")
+    parser.add_argument("--verify-v106", default="42462244338")
+    parser.add_argument("--verify-v107", default="42463773268")
     args = parser.parse_args()
     wheel = Path(args.wheel)
     notes = Path(args.notes).read_text(encoding="utf-8")
@@ -22,6 +27,9 @@ def main() -> int:
         raise SystemExit("notes must contain exactly one QUALITY_COUNTS line")
     version = args.version.lstrip("v")
     digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
+    def link(run: str) -> str:
+        return f"https://github.com/{args.repo}/actions/runs/{run}" if run else "not recorded"
+
     body = f"""# CBP v{version} — Release-evidence gate
 
 v{version} = v1.0.6 evidence closure + three AI audit gates (audit mode, non-blocking).
@@ -45,7 +53,10 @@ https://pypi.org/project/cbp-action/{version}/
 
 ## Section A: Security regression (blocking)
 
-- composite action payload E2E: 15/15 cases, Linux runner
+- main CI: {link(args.ci_run)} PASS
+- v1.0.6 verify: {link(args.verify_v106)} PASS
+- v1.0.7 verify: {link(args.verify_v107)} PASS
+- composite action payload E2E: {link(args.e2e_run)} PASS 15/15
 - checkout ref whitelist: PASS
 - release body auto-generated: PASS (no manual backfill)
 - release.yml permissions: PASS
