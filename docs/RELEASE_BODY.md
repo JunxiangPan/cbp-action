@@ -12,7 +12,7 @@ All 9 gates are active.
 
 ```text
 cbp_action-1.0.6-py3-none-any.whl
-sha256: 08ea9c3a2ee94e07e1c2768b48633ecc8adbfa89692f5d1e71ddf3785fab264e
+sha256: 95fbd11ef19eb3d9f924c3ab8bb8599236ad0be2d0354eef3e79e22914d80759
 ```
 
 https://pypi.org/project/cbp-action/1.0.6/
@@ -24,3 +24,4 @@ asset inventory verification are blocking gates.
 
 Section B: AI audit gates are non-blocking and reported separately when
 enabled.
+
