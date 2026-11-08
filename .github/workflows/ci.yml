@@ -246,7 +246,6 @@ jobs:
 
   ai-audit:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -255,12 +254,22 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install .
-      - name: AI release audit
-        run: python -m cbp.cli --gate ai-release --tag "$GITHUB_REF_NAME" --mode audit --sarif-output ai-release.sarif
-      - name: AI test audit
-        run: python -m cbp.cli --gate ai-test --baseline HEAD~1 --mode audit --sarif-output ai-test.sarif || true
-      - name: AI change audit
-        run: python -m cbp.cli --gate ai-change --baseline HEAD~1 --mode audit --sarif-output ai-change.sarif || true
+      - name: Run AI gates (audit, visible)
+        run: |
+          set +e
+          REL=0; TEST=0; CHG=0
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            python -m cbp.cli --gate ai-release --tag "$GITHUB_REF_NAME" --mode audit --sarif-output ai-release.sarif
+            REL=$?
+          else
+            echo "AI_GATE=ai-release status=SKIP reason=not-a-tag-ref"
+          fi
+          python -m cbp.cli --gate ai-test --test-path tests/fixtures/ai_no_assert.py --mode audit --sarif-output ai-test.sarif
+          TEST=$?
+          python -m cbp.cli --gate ai-change --baseline HEAD~1 --mode audit --sarif-output ai-change.sarif
+          CHG=$?
+          echo "AI_GATE_SUMMARY ai-release=$REL ai-test=$TEST ai-change=$CHG" | tee -a "$GITHUB_STEP_SUMMARY"
+          exit 0
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ai-audit-sarif

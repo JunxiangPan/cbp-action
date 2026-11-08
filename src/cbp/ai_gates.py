@@ -70,10 +70,13 @@ def _test_functions(path: Path) -> list[ast.FunctionDef]:
     return [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")]
 
 
-def ai_test(root: Path, baseline: str) -> GateResult:
+def ai_test(root: Path, baseline: str, test_path: str = "") -> GateResult:
     """CBP-TEST-001..004: missing/tautological assertions in changed tests."""
-    changed = _git(root, "diff", "--name-only", baseline).splitlines()
-    tests = [root / name for name in changed if Path(name).name.startswith("test_") and name.endswith(".py")]
+    if test_path:
+        tests = [root / test_path]
+    else:
+        changed = _git(root, "diff", "--name-only", baseline).splitlines()
+        tests = [root / name for name in changed if Path(name).name.startswith("test_") and name.endswith(".py")]
     if not tests:
         return GateResult("ai-test", "SKIP", [], ["no changed test files"])
     findings: list[str] = []
@@ -104,11 +107,11 @@ def ai_change(root: Path, baseline: str) -> GateResult:
     return GateResult("ai-change", "WARN" if findings else "PASS", findings, ["CBP-CHG-002/003 AST diff: audit v1.0.8"])
 
 
-def run(gate: str, root: Path, tag: str = "", baseline: str = "") -> GateResult:
+def run(gate: str, root: Path, tag: str = "", baseline: str = "", test_path: str = "") -> GateResult:
     if gate == "ai-release":
         return ai_release(root, tag)
     if gate == "ai-test":
-        return ai_test(root, baseline)
+        return ai_test(root, baseline, test_path)
     if gate == "ai-change":
         return ai_change(root, baseline)
     return GateResult(gate, "SKIP", [], ["unknown gate"])

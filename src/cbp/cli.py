@@ -127,12 +127,13 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
     parser.add_argument("--diff", default="")
     parser.add_argument("--gate", choices=("ai-release", "ai-test", "ai-change"), default="")
     parser.add_argument("--tag", default="")
+    parser.add_argument("--test-path", default="")
     parser.add_argument("--jobs", type=int, default=1)
     parser.add_argument("--github-annotations", action="store_true")
     args = parser.parse_args(argv)
     if args.gate:
         from . import ai_gates
-        result = ai_gates.run(args.gate, Path(args.root), args.tag, args.baseline)
+        result = ai_gates.run(args.gate, Path(args.root), args.tag, args.baseline, args.test_path)
         print(result.line())
         for finding in result.findings:
             print(finding)
