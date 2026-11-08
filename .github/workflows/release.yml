@@ -106,6 +106,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           CI_RUN_ID: ${{ inputs.ci_run_id }}
         run: |
+          rm -rf dist
           gh run download "$CI_RUN_ID" -n cbp-dist -D dist
           (cd dist && sha256sum -c WHEEL_SHA256)
       - name: Install built CBP wheel
