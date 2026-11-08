@@ -333,26 +333,29 @@ python tools/stamp_coverage.py --root . --coverage coverage.json
 
 ## Release body and errata
 
-`docs/RELEASE_BODY.md` is the only accepted source for the GitHub Release body.
-The release workflow publishes it with `--notes-file` and then runs:
+The release body is generated from the built wheel by
+`tools/generate_release_body.py` during the publish job. That run uploads the
+exact body it published as the `release-body-<run_id>` artifact, and
+`clean-verify` checks the live body against that artifact, not against a file in
+the tag. This keeps the check meaningful without moving a tag to match a body
+that could only be generated after the build.
+
+`docs/RELEASE_BODY.md` mirrors the published body for readers and for local
+checks. `--verify-release` compares the live body with whatever local body you
+pass (default: `docs/RELEASE_BODY.md`) and exits non-zero on a difference:
 
 ```bash
-python -m cbp.cli --verify-release v1.0.3 --repository owner/repo
+python -m cbp.cli --verify-release v1.0.9 --repository owner/repo
 ```
-
-The command fetches the live GitHub release body and compares its normalized
-SHA256 with the checked-in file. If the body was edited in the GitHub web UI,
-it exits non-zero with:
 
 ```text
 ERRATA release body mismatch ...
 ```
 
-CBP cannot prevent an owner from editing a release on GitHub. But if you do,
-the evidence chain breaks. Always update `docs/RELEASE_BODY.md`, re-run CI, and
-publish a new tag (or a patch release). If you must edit an old release, the
-edit is only acceptable after the evidence is regenerated and checked in; a
-silent web edit is an ERRATA, not a valid update.
+CBP cannot prevent an owner from editing a release on GitHub. But if you do, the
+evidence chain breaks: record the edit as an ERRATUM in the body itself, checked
+in through `docs/RELEASE_BODY.md`, and do not silently patch it. A silent web edit
+is an ERRATA, not a valid update.
 
 This is the open-source release discipline: edits are allowed, silent edits are
 not.
