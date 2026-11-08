@@ -187,8 +187,9 @@ def generate(
         raise ManifestError("; ".join(problems))
     _write_manifest(output, final_manifest)
     _write_notes(notes_template, notes_output, "9/9", gate_count=9)
-    if claims_gate.run(cfg)[0] is False:
-        raise ManifestError("final claims verification failed")
+    final_ok, final_detail = claims_gate.run(cfg)
+    if not final_ok:
+        raise ManifestError("final claims verification failed: " + final_detail)
     digest = hashlib.sha256(output.read_bytes()).hexdigest()
     _atomic_write(output.with_name(output.name + ".sha256"), digest + "  " + output.name + "\n")
     return final_manifest

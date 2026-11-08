@@ -19,6 +19,14 @@ jobs:
       contents: read
       actions: read
     steps:
+      - name: Require green main CI before publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+        run: |
+          case "$CI_RUN_ID" in (*[!0-9]*|'') echo "invalid ci_run_id" >&2; exit 2;; esac
+          STATUS=$(gh api "repos/${{ github.repository }}/actions/runs/$CI_RUN_ID" --jq .conclusion)
+          test "$STATUS" = "success" || { echo "CI run $CI_RUN_ID is $STATUS, refusing publish" >&2; exit 3; }
       - name: Reject placeholder bypass in GitHub Actions
         if: ${{ inputs.allow_placeholders == true }}
         run: |
