@@ -18,6 +18,9 @@
   (validation only), `--observed-exit-code` (F1 exit-code consistency).
 - `--jobs` now spawns real parallel execution again; it is no longer ignored.
 - Config gains `package_type`; this repository declares `"package_type": "cbp"`.
+- New `cbp errata` command: prefixes a body with the machine-readable `ERRATUM:`
+  token (F4), preserves the original bytes, reports any trailing ERRATUM section
+  as human-readable only, and prints a unified diff. It never edits GitHub.
 
 ## 1.0.9 — 2026-11-08
 

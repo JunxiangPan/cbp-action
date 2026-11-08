@@ -155,6 +155,19 @@ When `package_type` is `cbp`, the gates `claims`, `binary`, `encoding`, `docs`,
 and `custom` are forced: a SKIPPED forced gate is a blocking skip and exits 3.
 `skip_ratio = skip_count / applicable_gate_count`; more than 20% exits 4.
 
+Historical release bodies can be corrected without hiding the change. F4 reads
+only a body that starts with `ERRATUM:`; a section appended at the end is
+human-readable but invisible to the machine rule.
+
+```bash
+python -m cbp.cli errata --body current.md --output corrected.md --reason "..."
+python -m cbp.cli errata --body corrected.md --check
+```
+
+`cbp errata` generates and validates the body, including byte-preserving the
+original text. It never edits GitHub: the owner reviews the diff and runs
+`gh release edit <tag> --notes-file corrected.md`.
+
 ## Configuration
 
 See [`schemas/config.schema.json`](schemas/config.schema.json).

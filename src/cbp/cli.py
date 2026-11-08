@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import baseline, binary_gate, suppression, claims_gate, comment_gate, coverage_gate, custom_rules, dependency_gate, docs_gate, encoding_gate, report_parser, report_schema, sarif, upgrade_gate, verify_release
+from . import baseline, binary_gate, suppression, claims_gate, comment_gate, coverage_gate, custom_rules, dependency_gate, docs_gate, encoding_gate, errata, report_parser, report_schema, sarif, upgrade_gate, verify_release
 from .config import SCHEMA_VERSION, load_config
 
 
@@ -29,6 +29,50 @@ def _init(argv: list[str]) -> int:  # pragma: no cover - exercised via subproces
     path.write_text(json.dumps({"schema_version": SCHEMA_VERSION, "enable_claims": True}, indent=2) + chr(10), encoding="utf-8")
     print(f"INIT_OK {path}")
     return 0
+
+
+def _errata(argv: list[str]) -> int:
+    """Generate and validate an ERRATUM-prefixed body; never edits GitHub."""
+    parser = argparse.ArgumentParser(prog="cbp errata")
+    parser.add_argument("--body", required=True)
+    parser.add_argument("--output", default="")
+    parser.add_argument("--reason", default="")
+    parser.add_argument("--check", action="store_true")
+    parser.add_argument("--diff", action="store_true")
+    args = parser.parse_args(argv)
+    path = Path(args.body)
+    try:
+        with path.open(encoding="utf-8", newline="") as handle:
+            original = handle.read()
+    except FileNotFoundError:
+        print(json.dumps({"gate_status": "FAIL", "exit_code": 2, "error": f"body missing: {path}"}, ensure_ascii=False))
+        return report_schema.EXIT_INPUT
+    except OSError as exc:
+        print(json.dumps({"gate_status": "FAIL", "exit_code": 2, "error": f"body unreadable: {path}: {exc}"}, ensure_ascii=False))
+        return report_schema.EXIT_INPUT
+    if args.check:
+        if errata.is_errata(original):
+            print("ERRATUM_OK")
+            return report_schema.EXIT_PASS
+        print("ERRATUM_MISSING body does not start with ERRATUM:")
+        return report_schema.EXIT_GATE
+    corrected = errata.apply_errata(original, args.reason)
+    if corrected == original:
+        print("ERRATUM_ALREADY_PRESENT")
+    if args.diff or not args.output:
+        print(errata.unified_diff(original, corrected), end="")
+    if args.output:
+        with Path(args.output).open("w", encoding="utf-8", newline="") as handle:
+            handle.write(corrected)
+        print(f"ERRATUM_WRITTEN {args.output}")
+    trailing = errata.trailing_errata_count(corrected)
+    if trailing:
+        print(f"TRAILING_ERRATUM_SECTIONS={trailing} (human-readable only; F4 reads the prefix)")
+    if not errata.is_errata(corrected):
+        print("ERRATUM_INVALID corrected body is not machine-readable")
+        return report_schema.EXIT_INPUT
+    print(f"ERRATUM_OK chars={len(corrected)}")
+    return report_schema.EXIT_PASS
 
 
 def _configured(name: str, cfg) -> bool:
@@ -88,6 +132,8 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
         argv = __import__("sys").argv[1:]
     if argv and argv[0] == "init":
         return _init(argv[1:])
+    if argv and argv[0] == "errata":
+        return _errata(argv[1:])
     if argv and argv[:2] == ["policy", "test"]:
         return _policy_test(argv[2:])
     parser = argparse.ArgumentParser(prog="cbp")
