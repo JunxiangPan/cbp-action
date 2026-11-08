@@ -192,11 +192,12 @@ runs:
         echo "wheel-sha256=$WHEEL_SHA" >> "$GITHUB_OUTPUT"
         echo "wheel-path=$WHEEL" >> "$GITHUB_OUTPUT"
         set +e
+        EXTRA=()
+        if [ -n "$CBP_RULES_PATH" ]; then EXTRA+=(--rules-path "$CBP_RULES_PATH"); fi
+        if [ -n "$CBP_RULES_SHA256" ]; then EXTRA+=(--rules-sha256 "$CBP_RULES_SHA256"); fi
         OUTPUT=$(python -m cbp.cli \
           --root "$CBP_ROOT" \
           --config "$CBP_CONFIG" \
-          --rules-path "$CBP_RULES_PATH" \
-          --rules-sha256 "$CBP_RULES_SHA256" \
           --coverage-json "$CBP_COVERAGE_JSON" \
           --coverage-allowlist "$CBP_COVERAGE_ALLOWLIST" \
           --coverage-signature "$CBP_COVERAGE_SIGNATURE" \
@@ -222,7 +223,8 @@ runs:
           --enable-claims "$CBP_ENABLE_CLAIMS" \
           --enable-custom "$CBP_ENABLE_CUSTOM" \
           --enable-upgrade "$CBP_ENABLE_UPGRADE" \
-          --mode "$CBP_MODE" 2>&1)
+          --mode "$CBP_MODE" \
+          "${EXTRA[@]}" 2>&1)
         CODE=$?
         echo "$OUTPUT"
         echo "$OUTPUT" | grep -E '^CBP_RESULT=' | tail -1 >> "$GITHUB_OUTPUT"
