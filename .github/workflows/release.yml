@@ -136,7 +136,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          python -m cbp.cli --root "$GITHUB_WORKSPACE" --verify-release "$RELEASE_TAG" --repository "$GITHUB_REPOSITORY"
+          python -m cbp.cli --root "$GITHUB_WORKSPACE" --release-body dist/RELEASE_BODY.md --verify-release "$RELEASE_TAG" --repository "$GITHUB_REPOSITORY"
 
   clean-verify:
     needs: publish
@@ -169,4 +169,4 @@ jobs:
           case "$RELEASE_TAG" in (v[0-9]*.[0-9]*.[0-9]*) ;; (*) echo "invalid release_tag" >&2; exit 2;; esac
           mkdir -p dist
           gh release download "$RELEASE_TAG" -R "$GITHUB_REPOSITORY" -p RELEASE_ASSETS.sha256 -D dist --clobber
-          python -m cbp.cli --root "$GITHUB_WORKSPACE" --verify-release "$RELEASE_TAG" --repository "$GITHUB_REPOSITORY"
+          python -m cbp.cli --root "$GITHUB_WORKSPACE" --release-body dist/RELEASE_BODY.md --verify-release "$RELEASE_TAG" --repository "$GITHUB_REPOSITORY"
