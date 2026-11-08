@@ -24,4 +24,3 @@ asset inventory verification are blocking gates.
 
 Section B: AI audit gates are non-blocking and reported separately when
 enabled.
-
