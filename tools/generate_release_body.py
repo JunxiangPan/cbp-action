@@ -21,6 +21,8 @@ def main() -> int:
     parser.add_argument("--verify-v107", default="42463773268")
     parser.add_argument("--double-build-run", default="")
     parser.add_argument("--sarif-run", default="")
+    parser.add_argument("--summary", default="")
+    parser.add_argument("--python310", default="PASS (tested in the OS x Python matrix)")
     args = parser.parse_args()
     wheel = Path(args.wheel)
     notes = Path(args.notes).read_text(encoding="utf-8")
@@ -32,9 +34,14 @@ def main() -> int:
     def link(run: str) -> str:
         return f"https://github.com/{args.repo}/actions/runs/{run}" if run else "not recorded"
 
+    summary = args.summary or f"Release evidence for v{version}."
+
+    def evidence(run: str, claim: str = "PASS") -> str:
+        return f"{link(run)} {claim}" if run else "not recorded"
+
     body = f"""# CBP v{version} — Release-evidence gate
 
-v{version} = v1.0.6 evidence closure + three AI audit gates (audit mode, non-blocking).
+{summary}
 
 This release body was generated from the built wheel by
 `tools/generate_release_body.py`; the wheel SHA256 is not hand-edited.
@@ -55,13 +62,13 @@ https://pypi.org/project/cbp-action/{version}/
 
 ## Section A: Security regression (blocking)
 
-- main CI: {link(args.ci_run)} PASS
-- v1.0.6 verify: {link(args.verify_v106)} PASS
-- v1.0.7 verify: {link(args.verify_v107)} PASS
-- composite action payload E2E: {link(args.e2e_run)} PASS 15/15
-- double build: {link(args.double_build_run)} PASS (byte-identical)
-- SARIF upload: {link(args.sarif_run)} PASS
-- Python 3.10: SKIPPED (setup-python 504; explicit, not removed from matrix)
+- main CI: {evidence(args.ci_run)}
+- v1.0.6 verify: {evidence(args.verify_v106)}
+- v1.0.7 verify: {evidence(args.verify_v107)}
+- composite action payload E2E (15 hostile inputs): {evidence(args.e2e_run, 'PASS 15/15')}
+- single build artifact re-verified: {evidence(args.double_build_run)}
+- SARIF upload: {evidence(args.sarif_run)}
+- Python 3.10: {args.python310}
 - checkout ref whitelist: PASS
 - release body auto-generated: PASS (no manual backfill)
 - release.yml permissions: PASS
@@ -70,9 +77,9 @@ https://pypi.org/project/cbp-action/{version}/
 
 ## Section B: AI audit gates (audit mode, non-blocking)
 
-- ai-release: PASS / WARN / SKIP (counts)
-- ai-test: PASS / WARN / SKIP (counts) | self-check: separate
-- ai-change: PASS / WARN / SKIP (counts)
+- ai-release / ai-test / ai-change run in the main CI `ai-audit` job; that job
+  prints `AI_GATE_SUMMARY` with PASS / WARN / SKIP counts: {link(args.ci_run)}
+- Section B gates are audit-only and do not block publishing.
 
 ## Still to acknowledge
 

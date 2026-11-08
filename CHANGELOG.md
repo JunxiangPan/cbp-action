@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.0.9 — 2026-11-08
+
+- The repository tracks no wheel, sdist, or `WHEEL_SHA256`; the `build-artifact`
+  job is the only build step and a CI job rejects tracked build artifacts.
+- `action.yml` no longer installs a wheel from the repository. It downloads the
+  wheel from the release it was pinned to (`cbp-version`), compares its SHA256
+  with the release asset digest, verifies Sigstore provenance with
+  `gh attestation verify`, and only then installs it. The verified digest and
+  path are exposed as the `wheel-sha256` and `wheel-path` outputs.
+- `e2e-payload` gains a `consumer-parity` job asserting that the wheel the action
+  installed equals the release asset digest and verifies against its attestation.
+- `CONTRIBUTING.md` records two rules: verification features need a consumer-view
+  E2E assertion, and the repository never tracks build artifacts.
+- Release verification compares the live body with the body artifact produced by
+  the publishing run, so a post-release body edit is still detected without
+  moving the tag.
+- The release body generator no longer claims a byte-identical double build, a
+  Python 3.10 skip, or unfilled AI gate counts.
+
 ## 1.0.8 — 2026-11-08
 
 - Build-once release pipeline: wheel is built once and shared as `cbp-dist`.

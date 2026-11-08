@@ -188,10 +188,15 @@ Suggested migration:
 ```bash
 cd cbp-action
 python -m pip install -e ".[test]"
+python -m build --wheel --sdist --outdir dist
 python -m coverage run --branch --source=src/cbp,tools -m pytest -q tests
 python -m coverage json -o coverage.json
+python tools/dogfood_manifest.py --root=. --coverage-json=coverage.json --output=quality-manifest.json --notes-template=docs/RELEASE_NOTES.md --notes-output=docs/RELEASE_NOTES.generated.md
 python -m cbp.cli --root . --mode enforce
 ```
+
+The build step is mandatory: the claims gate reads `dist/RELEASE_BODY.md` and the
+wheel it names, and the repository does not track either. `dist/` is gitignored.
 
 The package has no runtime dependencies outside the Python standard library.
 `pytest` and `coverage` are optional test dependencies.
@@ -379,8 +384,9 @@ See [`RELEASING.md`](RELEASING.md) for the commit -> CI -> tag -> release order.
 
 ## Status
 
-v1.0.3 is the current stable release. It does not import anything from
-the host product's `quality/`, `checks/`, or `tools/` directories.
+The current stable release is the latest entry on the GitHub Releases page. CBP
+does not import anything from the host product's `quality/`, `checks/`, or
+`tools/` directories.
 
 ### Coverage numbers in CI
 
@@ -394,9 +400,23 @@ See `docs/PYPI_TRUSTED_PUBLISHING.md`; publishing uses GitHub OIDC and does not 
 ## Benchmark platform
 
 The 6.44s 5k-file figure is Linux CI. On a Windows physical machine the same 5k run is about 30s because of filesystem `stat` overhead; this is documented and not treated as a Linux regression.
-## Prebuilt wheel
+## Action runtime wheel
 
-The action installs the checked-in `dist/cbp_action-1.0.3-py3-none-any.whl`; it does not build from source or contact the package index.
+The repository tracks no wheel, no sdist, and no `WHEEL_SHA256`. The composite
+action resolves its release tag (`cbp-version`, or the tag it was pinned to),
+downloads that release's wheel from GitHub, checks its SHA256 against the release
+asset digest reported by the GitHub API, verifies the Sigstore provenance with
+`gh attestation verify`, and only then installs it. The verified digest and path
+are exposed as the `wheel-sha256` and `wheel-path` outputs so a caller can assert
+that the wheel it ran is the wheel that was published.
+
+The action therefore needs network access to GitHub Releases and `gh` on the
+runner. It fails closed: no digest, no attestation, or a digest mismatch aborts
+the step instead of falling back to an unverified artifact. Pin the action to a
+release tag; a branch or local-path reference must pass `cbp-version` explicitly.
+
+The `build-artifact` job in `ci.yml` is the only place that runs `python -m build`.
+Every other job downloads the `cbp-dist` artifact.
 
 ## VM-only evidence
 

@@ -6,6 +6,9 @@ on:
         required: true
       ci_run_id:
         required: true
+      release_run_id:
+        description: release.yml run id that published the body
+        required: true
 permissions:
   contents: read
   actions: read
@@ -35,7 +38,15 @@ jobs:
         run: |
           mkdir -p dist
           gh release download "${{ inputs.tag }}" -p RELEASE_ASSETS.sha256 -D dist --clobber
+      - name: Download the body that run published
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_RUN_ID: ${{ inputs.release_run_id }}
+        run: |
+          mkdir -p dist
+          gh run download "$RELEASE_RUN_ID" -n "release-body-$RELEASE_RUN_ID" -D dist
+          test -f dist/RELEASE_BODY.md
       - name: Verify release body and assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python -m cbp.cli --root . --verify-release "${{ inputs.tag }}" --repository "${{ github.repository }}"
+        run: python -m cbp.cli --root . --release-body dist/RELEASE_BODY.md --verify-release "${{ inputs.tag }}" --repository "${{ github.repository }}"

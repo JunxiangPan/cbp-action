@@ -24,6 +24,20 @@ jobs:
           path: dist/
           if-no-files-found: error
 
+  repo-hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Reject tracked build artifacts
+        run: |
+          tracked=$(git ls-files 'dist/*' '*.whl' '*.tar.gz')
+          if [ -n "$tracked" ]; then
+            echo "TRACKED_BUILD_ARTIFACTS"
+            echo "$tracked"
+            exit 1
+          fi
+          echo "NO_TRACKED_BUILD_ARTIFACTS"
+
   test-coverage:
     name: test-coverage (${{ matrix.os }}, py${{ matrix.python }})
     strategy:

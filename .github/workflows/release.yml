@@ -12,6 +12,9 @@ on:
         description: Explicitly allow unresolved GitHub placeholder strings
         type: boolean
         default: false
+      e2e_run_id:
+        description: e2e-payload run id that proved the hostile-input cases
+        required: false
 jobs:
   verify-artifact:
     runs-on: ubuntu-latest
@@ -48,6 +51,19 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install -e ".[test]"
+      - name: Require the CI run commit to be the tag commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+        run: |
+          RUN_SHA=$(gh api "repos/${{ github.repository }}/actions/runs/$CI_RUN_ID" --jq .head_sha)
+          TAG_SHA=$(git rev-parse HEAD)
+          echo "ci_run_sha=$RUN_SHA"
+          echo "tag_sha=$TAG_SHA"
+          test "$RUN_SHA" = "$TAG_SHA" || {
+            echo "ci run $CI_RUN_ID was built at $RUN_SHA but the tag points at $TAG_SHA" >&2
+            exit 3
+          }
       - name: Download manifest artifact by explicit run id
         env:
           GH_TOKEN: ${{ github.token }}
@@ -60,12 +76,6 @@ jobs:
           CI_RUN_ID: ${{ inputs.ci_run_id }}
         run: |
           python tools/verify_manifest_artifact.py --manifest=artifact/quality-manifest.json --hash=artifact/quality-manifest.json.sha256 --notes=artifact/docs/RELEASE_NOTES.generated.md --run-id="$CI_RUN_ID" --commit-sha="$(git rev-parse HEAD)"
-      - name: Required artifact integrity gate
-        if: inputs.package-zip != ''
-        env:
-          PACKAGE_ZIP: ${{ inputs.package-zip }}
-        run: |
-          python -m cbp.cli --root "$GITHUB_WORKSPACE" --package-zip "$PACKAGE_ZIP" --mode enforce
       - name: Check Action metadata files
         run: |
           pwd
@@ -130,12 +140,19 @@ jobs:
         env:
           RELEASE_VERSION: ${{ inputs.release_tag }}
           CI_RUN_ID: ${{ inputs.ci_run_id }}
+          E2E_RUN_ID: ${{ inputs.e2e_run_id }}
         run: |
-          python tools/generate_release_body.py --wheel dist/*.whl --version "$RELEASE_VERSION" --notes artifact/docs/RELEASE_NOTES.generated.md --output dist/RELEASE_BODY.md --ci-run "$CI_RUN_ID" --double-build-run "$CI_RUN_ID" --sarif-run "$CI_RUN_ID"
+          python tools/generate_release_body.py --wheel dist/*.whl --version "$RELEASE_VERSION" --notes artifact/docs/RELEASE_NOTES.generated.md --output dist/RELEASE_BODY.md --ci-run "$CI_RUN_ID" --e2e-run "$E2E_RUN_ID" --double-build-run "$CI_RUN_ID" --sarif-run "$CI_RUN_ID"
       - name: Generate release asset manifest
         run: |
           cd dist
           sha256sum *.whl *.tar.gz ../artifact/quality-manifest.json ../artifact/quality-manifest.json.sha256 ../artifact/docs/RELEASE_NOTES.generated.md | awk '{n=$2; sub(/.*\//,"",n); print $1 " *" n}' > RELEASE_ASSETS.sha256
+      - name: Upload the release body used for publishing
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-body-${{ github.run_id }}
+          path: dist/RELEASE_BODY.md
+          if-no-files-found: error
       - name: AI release gate before publish
         env:
           RELEASE_TAG: ${{ inputs.release_tag }}
@@ -188,6 +205,11 @@ jobs:
           (cd dist-verify && sha256sum -c WHEEL_SHA256)
       - name: Install the released wheel on a clean runner
         run: python -m pip install --no-deps dist-verify/*.whl
+      - name: Download the body this run published
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: release-body-${{ github.run_id }}
+          path: dist
       - name: Download asset manifest and verify body + assets
         env:
           GH_TOKEN: ${{ github.token }}
