@@ -24,6 +24,8 @@ def main() -> int:
     digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
     body = f"""# CBP v{version} — Release-evidence gate
 
+v{version} = v1.0.6 evidence closure + three AI audit gates (audit mode, non-blocking).
+
 This release body was generated from the built wheel by
 `tools/generate_release_body.py`; the wheel SHA256 is not hand-edited.
 
@@ -41,13 +43,27 @@ sha256: {digest}
 
 https://pypi.org/project/cbp-action/{version}/
 
-## Release boundary
+## Section A: Security regression (blocking)
 
-Section A: input boundaries, release body generation, tag whitelist, and
-asset inventory verification are blocking gates.
+- composite action payload E2E: 15/15 cases, Linux runner
+- checkout ref whitelist: PASS
+- release body auto-generated: PASS (no manual backfill)
+- release.yml permissions: PASS
+- release asset inventory: PASS
+- security_core: 90%+ floor
 
-Section B: AI audit gates are non-blocking and reported separately when
-enabled.
+## Section B: AI audit gates (audit mode, non-blocking)
+
+- ai-release: PASS / WARN / SKIP (counts)
+- ai-test: PASS / WARN / SKIP (counts) | self-check: separate
+- ai-change: PASS / WARN / SKIP (counts)
+
+## Still to acknowledge
+
+- ai-test false-positive rate is not yet measured on external projects.
+- composite action payload E2E runs on GitHub Linux; local Windows is not verified.
+- ai-release is structured evidence only, not natural-language summarization.
+- Section B gates are audit-only and do not block publishing.
 """
     Path(args.output).write_text(body, encoding="utf-8")
     print(f"RELEASE_BODY_GENERATED {args.output} sha256={digest}")

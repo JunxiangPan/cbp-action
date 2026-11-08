@@ -125,9 +125,23 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
     parser.add_argument("--enable-custom", type=lambda x: x.lower() == "true", default=None)
     parser.add_argument("--enable-upgrade", type=lambda x: x.lower() == "true", default=None)
     parser.add_argument("--diff", default="")
+    parser.add_argument("--gate", choices=("ai-release", "ai-test", "ai-change"), default="")
+    parser.add_argument("--tag", default="")
     parser.add_argument("--jobs", type=int, default=1)
     parser.add_argument("--github-annotations", action="store_true")
     args = parser.parse_args(argv)
+    if args.gate:
+        from . import ai_gates
+        result = ai_gates.run(args.gate, Path(args.root), args.tag, args.baseline)
+        print(result.line())
+        for finding in result.findings:
+            print(finding)
+        for skipped in result.skipped:
+            print(f"SKIP {skipped}")
+        if args.sarif_output:
+            import json
+            Path(args.sarif_output).write_text(json.dumps(ai_gates.sarif(result), indent=2) + chr(10), encoding="utf-8")
+        return 1 if args.mode == "enforce" and result.status == "FAIL" else 0
     if args.verify_release:
         repository = args.repository or os.environ.get("GITHUB_REPOSITORY", "")
         if not repository:

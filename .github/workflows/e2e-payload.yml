@@ -1,0 +1,30 @@
+name: e2e-payload
+on:
+  workflow_dispatch:
+  pull_request:
+jobs:
+  payload-e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        input: [root, coverage-json, config]
+        payload:
+          - '$(touch /tmp/pwned)'
+          - '`touch /tmp/pwned`'
+          - "line1\n$(touch /tmp/pwned)"
+          - '; touch /tmp/pwned'
+          - '--help'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Run action with hostile input
+        uses: ./
+        continue-on-error: true
+        with:
+          root: ${{ matrix.input == 'root' && matrix.payload || '.' }}
+          coverage-json: ${{ matrix.input == 'coverage-json' && matrix.payload || '' }}
+          config: ${{ matrix.input == 'config' && matrix.payload || '' }}
+      - name: Assert payload not executed
+        run: |
+          if [ -e /tmp/pwned ]; then echo "PAYLOAD EXECUTED"; exit 1; fi
+          echo "PAYLOAD NOT EXECUTED input=${{ matrix.input }}"
