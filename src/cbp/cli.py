@@ -139,7 +139,6 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
         for skipped in result.skipped:
             print(f"SKIP {skipped}")
         if args.sarif_output:
-            import json
             Path(args.sarif_output).write_text(json.dumps(ai_gates.sarif(result), indent=2) + chr(10), encoding="utf-8")
         return 1 if args.mode == "enforce" and result.status == "FAIL" else 0
     if args.verify_release:
