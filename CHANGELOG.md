@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased — CONTRACT v1.7 stage 0
+
+- `report_schema.py`: the six CONTRACT §3 gate statuses, the §1 exit-code table
+  (0/2/3/4), bare-64-hex hash validation, and quality-manifest v1.7 field
+  validation. `producer_id` is emitted as `cbp`; `schema_version` stays `"1"`
+  (D1: adding a field is not a structural break).
+- `report_parser.py`: structured-JSON-only parser for CBE reports, CBP manifests,
+  and CBP gate reports. Missing/invalid fields, unsupported `schema_version`, a
+  `sha256:` prefix, and an inconsistent skip ratio are input errors (exit 2). An
+  exit 3 without a valid `gate_status` is an input error, per CONTRACT §1.
+- CLI exit codes are now 0/2/3/4. `package_type: "cbp"` turns claims, binary,
+  encoding, docs, and custom into forced gates: a forced SKIPPED gate sets
+  `blocking_skip` and exits 3. More than 20% skipped exits 4. `audit`/`warn`
+  still exit 0 but print `contract_exit_code` and `publishable=false`.
+- New CLI flags: `--report-json` (writes a parseable gate report), `--parse-report`
+  (validation only), `--observed-exit-code` (F1 exit-code consistency).
+- `--jobs` now spawns real parallel execution again; it is no longer ignored.
+- Config gains `package_type`; this repository declares `"package_type": "cbp"`.
+
 ## 1.0.9 — 2026-11-08
 
 - The repository tracks no wheel, sdist, or `WHEEL_SHA256`; the `build-artifact`

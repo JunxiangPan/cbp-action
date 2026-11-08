@@ -22,6 +22,7 @@ LEGACY_FIELDS = {
 class GateConfig:
     """Inputs and thresholds for one CBP audit run."""
     root: Path
+    package_type: str = ""
     schema_version: str = SCHEMA_VERSION
     coverage_json: Path | str = ""
     coverage_allowlist: Path | str = ""

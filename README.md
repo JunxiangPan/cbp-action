@@ -127,12 +127,33 @@ python -m pip install -e ".[test]"
 python -m cbp.cli --root /path/to/repo --config .cbp/config.json
 ```
 
-`audit` mode reports failures but exits zero; `enforce` exits non-zero.
+Exit codes follow CONTRACT v1.7:
+
+| Code | Meaning | gate_status |
+| --- | --- | --- |
+| 0 | PASS | `PASS` |
+| 2 | input or format error | `FAIL` or `PRECONDITION_FAIL` |
+| 3 | gate failure or infrastructure failure | `FAIL` or `SKIPPED_INFRA` |
+| 4 | skip ratio above 20% | `FAIL` |
+
+`audit` and `warn` are local diagnostics: they exit 0 but print
+`CBP_MODE=… contract_exit_code=… publishable=…`, so a suppressed failure stays
+visible. Only `enforce` produces publishable evidence.
 
 ```bash
 python -m cbp.cli --root . --mode audit
-python -m cbp.cli --root . --mode enforce
+python -m cbp.cli --root . --mode enforce --report-json gate-report.json
+python -m cbp.cli --parse-report gate-report.json
+python -m cbp.cli --parse-report other-report.json --observed-exit-code 3
 ```
+
+`--parse-report` reads structured JSON only; it never greps stdout or a log. An
+exit code of 3 without a valid `gate_status` is treated as an input error (exit
+2), per CONTRACT §1.
+
+When `package_type` is `cbp`, the gates `claims`, `binary`, `encoding`, `docs`,
+and `custom` are forced: a SKIPPED forced gate is a blocking skip and exits 3.
+`skip_ratio = skip_count / applicable_gate_count`; more than 20% exits 4.
 
 ## Configuration
 

@@ -119,5 +119,6 @@
   "rules_changelog_manifest": "rules/changelog.sha256",
   "release_version": "1.0.9",
   "release_artifact": "dist/cbp_action-1.0.9-py3-none-any.whl",
+  "package_type": "cbp",
   "pypi_project": "cbp-action"
 }
