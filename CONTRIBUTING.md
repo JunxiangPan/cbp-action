@@ -39,11 +39,13 @@ shipped.
 
 ## No build artifacts in the repository
 
-The repository must not track a wheel, an sdist, or `WHEEL_SHA256`. The `cbp-dist`
-artifact produced by the `build-artifact` job is the only build output: every
-other job downloads it, and the composite action downloads the released, attested
-wheel at runtime. `git ls-files dist` must be empty, and a test enforces it.
-Local builds go to the gitignored `dist/`.
+The repository must not track a wheel, an sdist, `WHEEL_SHA256`, or
+`coverage.json`. The `cbp-dist` artifact produced by the `build-artifact` job is
+the only build output: every other job downloads it, and the composite action
+downloads the released, attested wheel at runtime. `git ls-files dist` must be
+empty, and a test enforces it. Local builds go to the gitignored `dist/`;
+`coverage.json` embeds the commit fingerprint, so it is regenerated locally and
+in CI instead of being committed.
 
 ## Local checks
 
@@ -52,6 +54,7 @@ python -m pip install -e ".[test]"
 python -m build --wheel --sdist --outdir dist
 python -m coverage run --branch -m pytest -q tests
 python -m coverage json -o coverage.json
+python tools/stamp_coverage.py --root . --coverage coverage.json
 python tools/dogfood_manifest.py --root=. --coverage-json=coverage.json --output=quality-manifest.json --notes-template=docs/RELEASE_NOTES.md --notes-output=docs/RELEASE_NOTES.generated.md
 python -m cbp.cli --root . --mode enforce
 ```
@@ -84,6 +87,7 @@ python -m pip install -e ".[test]"
 python -m build --wheel --sdist --outdir dist
 python -m coverage run --branch -m pytest -q tests
 python -m coverage json -o coverage.json
+python tools/stamp_coverage.py --root . --coverage coverage.json
 python tools/dogfood_manifest.py --root=. --coverage-json=coverage.json --output=quality-manifest.json --notes-template=docs/RELEASE_NOTES.md --notes-output=docs/RELEASE_NOTES.generated.md
 python -m cbp.cli --root . --mode enforce
 python tools/audit_rule_sources.py --root .

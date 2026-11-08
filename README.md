@@ -191,12 +191,14 @@ python -m pip install -e ".[test]"
 python -m build --wheel --sdist --outdir dist
 python -m coverage run --branch --source=src/cbp,tools -m pytest -q tests
 python -m coverage json -o coverage.json
+python tools/stamp_coverage.py --root . --coverage coverage.json
 python tools/dogfood_manifest.py --root=. --coverage-json=coverage.json --output=quality-manifest.json --notes-template=docs/RELEASE_NOTES.md --notes-output=docs/RELEASE_NOTES.generated.md
 python -m cbp.cli --root . --mode enforce
 ```
 
-The build step is mandatory: the claims gate reads `dist/RELEASE_BODY.md` and the
-wheel it names, and the repository does not track either. `dist/` is gitignored.
+The build and stamp steps are mandatory: the claims gate reads
+`dist/RELEASE_BODY.md` and the wheel it names, and the coverage gate rejects an
+unstamped `coverage.json`. The repository tracks neither file.
 
 The package has no runtime dependencies outside the Python standard library.
 `pytest` and `coverage` are optional test dependencies.
