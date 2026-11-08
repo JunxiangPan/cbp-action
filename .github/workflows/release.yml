@@ -55,13 +55,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           CI_RUN_ID: ${{ inputs.ci_run_id }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          RUN_SHA=$(gh api "repos/${{ github.repository }}/actions/runs/$CI_RUN_ID" --jq .head_sha)
-          TAG_SHA=$(git rev-parse HEAD)
-          echo "ci_run_sha=$RUN_SHA"
-          echo "tag_sha=$TAG_SHA"
-          test "$RUN_SHA" = "$TAG_SHA" || {
-            echo "ci run $CI_RUN_ID was built at $RUN_SHA but the tag points at $TAG_SHA" >&2
+          TAG_COMMIT=$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")
+          CI_COMMIT=$(gh api "repos/${{ github.repository }}/actions/runs/$CI_RUN_ID" --jq .head_sha)
+          echo "tag_commit=$TAG_COMMIT"
+          echo "ci_commit=$CI_COMMIT"
+          test "$TAG_COMMIT" = "$CI_COMMIT" || {
+            echo "TAG != CI COMMIT: tag $RELEASE_TAG points at $TAG_COMMIT but CI run $CI_RUN_ID was built at $CI_COMMIT" >&2
             exit 3
           }
       - name: Download manifest artifact by explicit run id
@@ -74,8 +75,9 @@ jobs:
       - name: Verify manifest hash, run id, commit, and notes
         env:
           CI_RUN_ID: ${{ inputs.ci_run_id }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          python tools/verify_manifest_artifact.py --manifest=artifact/quality-manifest.json --hash=artifact/quality-manifest.json.sha256 --notes=artifact/docs/RELEASE_NOTES.generated.md --run-id="$CI_RUN_ID" --commit-sha="$(git rev-parse HEAD)"
+          python tools/verify_manifest_artifact.py --manifest=artifact/quality-manifest.json --hash=artifact/quality-manifest.json.sha256 --notes=artifact/docs/RELEASE_NOTES.generated.md --run-id="$CI_RUN_ID" --commit-sha="$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
       - name: Check Action metadata files
         run: |
           pwd
