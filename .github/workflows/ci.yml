@@ -153,9 +153,10 @@ jobs:
         env:
           CBP_MANIFEST: ${{ github.workspace }}/artifact/quality-manifest.json
           CBP_NOTES: ${{ github.workspace }}/artifact/docs/RELEASE_NOTES.generated.md
+          CBP_BODY: ${{ github.workspace }}/artifact/dist/RELEASE_BODY.md
         run: |
           echo "CBP_MANIFEST=$CBP_MANIFEST"
-          python -m cbp.cli --root . --mode enforce --manifest="$CBP_MANIFEST" --claims-notes="$CBP_NOTES"
+          python -m cbp.cli --root . --mode enforce --manifest="$CBP_MANIFEST" --claims-notes="$CBP_NOTES" --release-body="$CBP_BODY"
 
   quickstart:
     runs-on: ubuntu-latest
