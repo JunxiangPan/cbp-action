@@ -183,11 +183,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           CI_RUN_ID: ${{ inputs.ci_run_id }}
         run: |
-          mkdir -p dist
-          gh run download "$CI_RUN_ID" -n cbp-dist -D dist
-          (cd dist && sha256sum -c WHEEL_SHA256)
+          rm -rf dist-verify
+          gh run download "$CI_RUN_ID" -n cbp-dist -D dist-verify
+          (cd dist-verify && sha256sum -c WHEEL_SHA256)
       - name: Install the released wheel on a clean runner
-        run: python -m pip install --no-deps dist/*.whl
+        run: python -m pip install --no-deps dist-verify/*.whl
       - name: Download asset manifest and verify body + assets
         env:
           GH_TOKEN: ${{ github.token }}
