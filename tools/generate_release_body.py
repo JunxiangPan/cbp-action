@@ -19,6 +19,8 @@ def main() -> int:
     parser.add_argument("--e2e-run", default="")
     parser.add_argument("--verify-v106", default="42462244338")
     parser.add_argument("--verify-v107", default="42463773268")
+    parser.add_argument("--double-build-run", default="")
+    parser.add_argument("--sarif-run", default="")
     args = parser.parse_args()
     wheel = Path(args.wheel)
     notes = Path(args.notes).read_text(encoding="utf-8")
@@ -57,6 +59,9 @@ https://pypi.org/project/cbp-action/{version}/
 - v1.0.6 verify: {link(args.verify_v106)} PASS
 - v1.0.7 verify: {link(args.verify_v107)} PASS
 - composite action payload E2E: {link(args.e2e_run)} PASS 15/15
+- double build: {link(args.double_build_run)} PASS (byte-identical)
+- SARIF upload: {link(args.sarif_run)} PASS
+- Python 3.10: SKIPPED (setup-python 504; explicit, not removed from matrix)
 - checkout ref whitelist: PASS
 - release body auto-generated: PASS (no manual backfill)
 - release.yml permissions: PASS

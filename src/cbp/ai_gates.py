@@ -31,12 +31,12 @@ def _version(root: Path) -> str:
     return match.group(1) if match else ""
 
 
-def ai_release(root: Path, tag: str) -> GateResult:
+def ai_release(root: Path, tag: str, body_path: str = "") -> GateResult:
     """CBP-REL-001..004: structured release evidence, no natural language."""
     findings: list[str] = []
     skipped: list[str] = []
     version = tag.lstrip("v")
-    body = root / "docs" / "RELEASE_BODY.md"
+    body = root / body_path if body_path else root / "docs" / "RELEASE_BODY.md"
     notes = root / "docs" / "RELEASE_NOTES.generated.md"
     assets = root / "dist" / "RELEASE_ASSETS.sha256"
     if not body.is_file():
@@ -107,9 +107,9 @@ def ai_change(root: Path, baseline: str) -> GateResult:
     return GateResult("ai-change", "WARN" if findings else "PASS", findings, ["CBP-CHG-002/003 AST diff: audit v1.0.8"])
 
 
-def run(gate: str, root: Path, tag: str = "", baseline: str = "", test_path: str = "") -> GateResult:
+def run(gate: str, root: Path, tag: str = "", baseline: str = "", test_path: str = "", body_path: str = "") -> GateResult:
     if gate == "ai-release":
-        return ai_release(root, tag)
+        return ai_release(root, tag, body_path)
     if gate == "ai-test":
         return ai_test(root, baseline, test_path)
     if gate == "ai-change":

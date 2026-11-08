@@ -133,7 +133,7 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
     args = parser.parse_args(argv)
     if args.gate:
         from . import ai_gates
-        result = ai_gates.run(args.gate, Path(args.root), args.tag, args.baseline, args.test_path)
+        result = ai_gates.run(args.gate, Path(args.root), args.tag, args.baseline, args.test_path, args.release_body)
         print(result.line())
         for finding in result.findings:
             print(finding)

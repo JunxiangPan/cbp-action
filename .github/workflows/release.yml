@@ -127,11 +127,18 @@ jobs:
           RELEASE_VERSION: ${{ inputs.release_tag }}
           CI_RUN_ID: ${{ inputs.ci_run_id }}
         run: |
-          python tools/generate_release_body.py --wheel dist/*.whl --version "$RELEASE_VERSION" --notes artifact/docs/RELEASE_NOTES.generated.md --output dist/RELEASE_BODY.md --ci-run "$CI_RUN_ID"
+          python tools/generate_release_body.py --wheel dist/*.whl --version "$RELEASE_VERSION" --notes artifact/docs/RELEASE_NOTES.generated.md --output dist/RELEASE_BODY.md --ci-run "$CI_RUN_ID" --double-build-run "$CI_RUN_ID" --sarif-run "$CI_RUN_ID"
       - name: Generate release asset manifest
         run: |
           cd dist
           sha256sum *.whl *.tar.gz ../artifact/quality-manifest.json ../artifact/quality-manifest.json.sha256 ../artifact/docs/RELEASE_NOTES.generated.md | awk '{n=$2; sub(/.*\//,"",n); print $1 " *" n}' > RELEASE_ASSETS.sha256
+      - name: AI release gate before publish
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          mkdir -p docs dist
+          cp artifact/docs/RELEASE_NOTES.generated.md docs/RELEASE_NOTES.generated.md
+          python -m cbp.cli --gate ai-release --tag "$RELEASE_TAG" --release-body dist/RELEASE_BODY.md --mode enforce
       - name: Publish release from the generated notes
         env:
           GH_TOKEN: ${{ github.token }}
