@@ -82,7 +82,7 @@
   "claims_manifest": "quality-manifest.json",
   "claims_notes": "docs/RELEASE_NOTES.generated.md",
   "enable_encoding": true,
-  "release_body": "docs/RELEASE_BODY.md",
+  "release_body": "dist/RELEASE_BODY.md",
   "custom_rules": [
     {
       "id": "CBP-CUSTOM-CBP-MARKER",

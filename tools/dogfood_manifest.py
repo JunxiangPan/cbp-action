@@ -187,6 +187,17 @@ def generate(
         raise ManifestError("; ".join(problems))
     _write_manifest(output, final_manifest)
     _write_notes(notes_template, notes_output, "9/9", gate_count=9)
+    wheel = cfg.path(cfg.release_artifact) if getattr(cfg, "release_artifact", "") else None
+    if wheel is None or not wheel.is_file():
+        raise ManifestError("release wheel artifact missing: " + str(getattr(cfg, "release_artifact", "")))
+    version = str(getattr(cfg, "release_version", "")).lstrip("v")
+    body_output = root / "dist" / "RELEASE_BODY.md"
+    import subprocess
+    subprocess.run([
+        sys.executable, str(root / "tools" / "generate_release_body.py"),
+        "--wheel", str(wheel), "--version", "v" + version,
+        "--notes", str(notes_output), "--output", str(body_output),
+    ], check=True)
     final_ok, final_detail = claims_gate.run(cfg)
     if not final_ok:
         raise ManifestError("final claims verification failed: " + final_detail)
