@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.8 — 2026-11-08
+
+- Build-once release pipeline: wheel is built once and shared as `cbp-dist`.
+- dogfood, dogfood-verify, release, and clean-verify consume the same artifact.
+- Python 3.10 is explicitly SKIPPED when setup-python download is unavailable.
+- AI audit results are visible in CI; ai-test self-check catches CBP-TEST-001.
+- Publish hard gate requires a green CI run whose commit matches the tag.
+
 ## 1.0.3 — 2026-11-08
 
 - `action.yml` verifies `dist/WHEEL_SHA256` before installing the wheel.
