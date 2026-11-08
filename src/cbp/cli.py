@@ -268,7 +268,7 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
             plan.append((name, None, reason, forced, False))
         elif not _configured(name, cfg):
             forced = contract_mode and name in report_schema.FORCED_GATES
-            reason = "forced gate is not configured" if forced else "not applicable (not configured)"
+            reason = "forced gate is not configured" if forced else "not configured"
             plan.append((name, None, reason, forced, not forced))
         else:
             plan.append((name, runners[name], "", False, False))
