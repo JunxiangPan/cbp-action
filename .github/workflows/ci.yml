@@ -118,6 +118,7 @@ jobs:
             quality-manifest.json
             quality-manifest.json.sha256
             docs/RELEASE_NOTES.generated.md
+            dist/RELEASE_BODY.md
           if-no-files-found: error
 
   dogfood-verify:
