@@ -14,19 +14,19 @@ All 9 gates are active.
 
 ```text
 cbp_action-1.0.8-py3-none-any.whl
-sha256: 22eeaeab0fe2015b27d20873b471e270238056ef1cb65597a6c4a3d130076189
+sha256: 2479da2f541fdbe778f5c4680a997eea562d08a8dbc68c13f8a1d317443185e4
 ```
 
 https://pypi.org/project/cbp-action/1.0.8/
 
 ## Section A: Security regression (blocking)
 
-- main CI: not recorded PASS
+- main CI: https://github.com/JunxiangPan/cbp-action/actions/runs/42477096861 PASS
 - v1.0.6 verify: https://github.com/JunxiangPan/cbp-action/actions/runs/42462244338 PASS
 - v1.0.7 verify: https://github.com/JunxiangPan/cbp-action/actions/runs/42463773268 PASS
 - composite action payload E2E: not recorded PASS 15/15
-- double build: not recorded PASS (byte-identical)
-- SARIF upload: not recorded PASS
+- double build: https://github.com/JunxiangPan/cbp-action/actions/runs/42477096861 PASS (byte-identical)
+- SARIF upload: https://github.com/JunxiangPan/cbp-action/actions/runs/42477096861 PASS
 - Python 3.10: SKIPPED (setup-python 504; explicit, not removed from matrix)
 - checkout ref whitelist: PASS
 - release body auto-generated: PASS (no manual backfill)
