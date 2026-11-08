@@ -23,6 +23,7 @@ def main() -> int:
     parser.add_argument("--sarif-run", default="")
     parser.add_argument("--summary", default="")
     parser.add_argument("--python310", default="PASS (tested in the OS x Python matrix)")
+    parser.add_argument("--infra-failure", action="append", default=[], metavar="TEXT")
     args = parser.parse_args()
     wheel = Path(args.wheel)
     notes = Path(args.notes).read_text(encoding="utf-8")
@@ -38,6 +39,15 @@ def main() -> int:
 
     def evidence(run: str, claim: str = "PASS") -> str:
         return f"{link(run)} {claim}" if run else "not recorded"
+
+    infra_section = ""
+    if args.infra_failure:
+        lines = "\n".join(f"- {item}" for item in args.infra_failure)
+        infra_section = (
+            "## Infrastructure failures (SKIPPED_INFRA; publish blocked)\n\n"
+            "These are not PASS and are not counted in the skip ratio.\n\n"
+            f"{lines}\n\n"
+        )
 
     body = f"""# CBP v{version} — Release-evidence gate
 
@@ -75,7 +85,7 @@ https://pypi.org/project/cbp-action/{version}/
 - release asset inventory: PASS
 - security_core: 90%+ floor
 
-## Section B: AI audit gates (audit mode, non-blocking)
+{infra_section}## Section B: AI audit gates (audit mode, non-blocking)
 
 - ai-release / ai-test / ai-change run in the main CI `ai-audit` job; that job
   prints `AI_GATE_SUMMARY` with PASS / WARN / SKIP counts: {link(args.ci_run)}

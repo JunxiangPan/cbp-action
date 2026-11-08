@@ -58,6 +58,7 @@ class GateConfig:
     package_zip: Path | None = None
     enable_coverage: bool = True
     enable_encoding: bool = True
+    encoding_allowlist: tuple[dict, ...] = ()
     enable_dependency: bool = True
     enable_comments: bool = True
     enable_docs: bool = True

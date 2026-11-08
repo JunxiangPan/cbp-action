@@ -79,9 +79,9 @@ The owner reviews the diff and runs
 | Phase | Case(s) | Status |
 |---|---|---|
 | 0 (contract core) | CBP-01, CBP-02, CBP-03, CBP-11, CBP-12, CBP-13 | **implemented** (`report_schema`, `report_parser`, CLI exit codes) |
-| 0.5 (errata) | none (tooling case only) | pending owner authorisation |
-| 1 (F3/F5) | CBP-04, CBP-05, CBP-07 | pending |
-| 2 (`--rules-path`) | CBP-06, CBP-14 | pending |
-| 3 (F4 / bootstrap) | CBP-10, CBP-15 | pending |
-| 4 (freeze) | all, wired into one `cbp-e2e.yml` workflow | pending |
-| 5 (publish wiring) | CBP-08, CBP-09, CBP-10 | pending |
+| 0.5 (errata) | none (tooling case only) | tool implemented; the v1.0.8 body edit awaits the owner |
+| 1 (F3/F5) | CBP-04, CBP-05, CBP-07 | **implemented for force/skip and verify-release infra**; the external-report OSError path and the standalone body section wiring remain |
+| 2 (`--rules-path`) | CBP-06, CBP-14 | **implemented** (pack loading, exit 2 on bad input, CBP-only namespace mapping) |
+| 3 (F4 / bootstrap) | CBP-10, CBP-15 | CBP-10 (`--require-gate-pass`, tag/CI binding) implemented; CBP-15 self-bootstrap pending |
+| 4 (freeze) | all, wired into one `cbp-e2e.yml` workflow | pending — cases are covered across unit/integration tests, not yet as one ID-addressed suite |
+| 5 (publish wiring) | CBP-08, CBP-09, CBP-10 | manifest carries artifact hashes and the publish gate requires PASS; asset inventory checks pre-exist |

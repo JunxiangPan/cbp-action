@@ -13,6 +13,12 @@ inputs:
   config:
     description: Optional CBP JSON/TOML config path (defaults to root/cbp.json)
     default: ""
+  rules-path:
+    description: Optional CBE rule pack JSON loaded into the custom gate
+    default: ""
+  rules-sha256:
+    description: Optional expected SHA256 for the rule pack
+    default: ""
   coverage-json:
     description: Path to coverage.py JSON output
     default: ""
@@ -109,6 +115,8 @@ runs:
         ACTION_REPOSITORY: ${{ github.action_repository }}
         CBP_ROOT: ${{ inputs.root }}
         CBP_CONFIG: ${{ inputs.config }}
+        CBP_RULES_PATH: ${{ inputs.rules-path }}
+        CBP_RULES_SHA256: ${{ inputs.rules-sha256 }}
         CBP_COVERAGE_JSON: ${{ inputs.coverage-json }}
         CBP_COVERAGE_ALLOWLIST: ${{ inputs.coverage-allowlist }}
         CBP_COVERAGE_SIGNATURE: ${{ inputs.coverage-signature }}
@@ -187,6 +195,8 @@ runs:
         OUTPUT=$(python -m cbp.cli \
           --root "$CBP_ROOT" \
           --config "$CBP_CONFIG" \
+          --rules-path "$CBP_RULES_PATH" \
+          --rules-sha256 "$CBP_RULES_SHA256" \
           --coverage-json "$CBP_COVERAGE_JSON" \
           --coverage-allowlist "$CBP_COVERAGE_ALLOWLIST" \
           --coverage-signature "$CBP_COVERAGE_SIGNATURE" \

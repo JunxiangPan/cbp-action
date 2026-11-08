@@ -69,3 +69,19 @@ def test_cli_errata_writes_a_machine_readable_body(tmp_path: Path, capsys) -> No
     out = capsys.readouterr().out
     assert "TRAILING_ERRATUM_SECTIONS=1" in out
     assert "ERRATUM_WRITTEN" in out
+
+
+def test_cli_errata_directory_body_exits_two(tmp_path: Path, capsys) -> None:
+    directory = tmp_path / "dir"
+    directory.mkdir()
+    assert cli.main(["errata", "--body", str(directory)]) == 2
+    assert "body unreadable" in capsys.readouterr().out
+
+
+def test_cli_errata_already_prefixed_is_idempotent(tmp_path: Path, capsys) -> None:
+    body = tmp_path / "body.md"
+    body.write_text("ERRATUM:\n\nreason\n\n# release\n", encoding="utf-8")
+    assert cli.main(["errata", "--body", str(body)]) == 0
+    out = capsys.readouterr().out
+    assert "ERRATUM_ALREADY_PRESENT" in out
+    assert "ERRATUM_OK" in out

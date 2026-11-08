@@ -155,6 +155,9 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
     parser.add_argument("--claims-manifest", default="")
     parser.add_argument("--claims-notes", default="")
     parser.add_argument("--release-body", default="")
+    parser.add_argument("--release-assets", default="")
+    parser.add_argument("--rules-path", default="")
+    parser.add_argument("--rules-sha256", default="")
     parser.add_argument("--manifest", default="")
     parser.add_argument("--sarif-output", default="")
     parser.add_argument("--report-json", default="")
@@ -210,22 +213,30 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
             print("VERIFY_RELEASE_FAILED: --repository or GITHUB_REPOSITORY is required")
             return report_schema.EXIT_INPUT
         body = Path(args.release_body) if args.release_body else Path(args.root) / "docs" / "RELEASE_BODY.md"
-        ok, detail = verify_release.verify(repository, args.verify_release, body, verify_release.token_from_env())
+        try:
+            ok, detail = verify_release.verify(repository, args.verify_release, body, verify_release.token_from_env())
+        except report_schema.InfraError as exc:
+            print(f"GATE_STATUS=SKIPPED_INFRA {exc}")
+            return report_schema.EXIT_GATE
         print(("RELEASE_BODY_OK " if ok else "") + detail)
         if not ok:
             return report_schema.EXIT_GATE
-        asset_manifest = Path(args.root) / "dist" / "RELEASE_ASSETS.sha256"
+        asset_manifest = (
+            Path(args.release_assets)
+            if args.release_assets
+            else Path(args.root) / "dist" / "RELEASE_ASSETS.sha256"
+        )
         if not asset_manifest.is_file():
             print("FAIL: RELEASE_ASSETS.sha256 missing; asset verification cannot run", file=sys.stderr)
-            return 2
+            return report_schema.EXIT_INPUT
         from .verify_release_assets import verify_from_manifest
         assets_ok, assets_detail = verify_from_manifest(
             asset_manifest, repository, args.verify_release, verify_release.token_from_env()
         )
         print(assets_detail)
         if not assets_ok:
-            return 3
-        return 0
+            return report_schema.EXIT_GATE
+        return report_schema.EXIT_PASS
     config_path = Path(args.config) if args.config else Path(args.root) / "cbp.json"
     if not args.config and not config_path.is_file():
         config_path = Path(args.root) / ".cbp" / "config.json"
@@ -254,6 +265,26 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
     except (OSError, ValueError, RuntimeError) as exc:
         print(json.dumps({"gate_status": "FAIL", "exit_code": report_schema.EXIT_INPUT, "error": str(exc)}, ensure_ascii=False))
         return report_schema.EXIT_INPUT
+    if args.rules_sha256 and not args.rules_path:
+        print(json.dumps({
+            "gate_status": "FAIL",
+            "exit_code": report_schema.EXIT_INPUT,
+            "error": "--rules-sha256 requires --rules-path",
+        }, ensure_ascii=False))
+        return report_schema.EXIT_INPUT
+    if args.rules_path:
+        from . import packs
+        try:
+            pack = packs.load_pack(Path(args.rules_path), args.rules_sha256)
+        except (OSError, ValueError, packs.PackError) as exc:
+            print(json.dumps({
+                "gate_status": "FAIL",
+                "exit_code": report_schema.EXIT_INPUT,
+                "error": f"rules pack unreadable: {args.rules_path}: {exc}",
+            }, ensure_ascii=False))
+            return report_schema.EXIT_INPUT
+        cfg.custom_rules = tuple(getattr(cfg, "custom_rules", ()) or ()) + tuple(pack["rules"])
+        cfg.enable_custom = True
     runners = {
         "encoding": encoding_gate.run,
         "coverage": coverage_gate.run,

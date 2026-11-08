@@ -337,7 +337,16 @@ jobs:
           python -m cbp.cli --gate ai-change --baseline HEAD~1 --mode audit --sarif-output ai-change.sarif
           CHG=$?
           echo "AI_GATE_SUMMARY ai-release=$REL ai-test=$TEST ai-change=$CHG" | tee -a "$GITHUB_STEP_SUMMARY"
-          exit 0
+          failed=0
+          if [ "$TEST" -ne 0 ]; then echo "AI_GATE_CRASH gate=ai-test exit=$TEST" >&2; failed=1; fi
+          if [ "$CHG" -ne 0 ]; then echo "AI_GATE_CRASH gate=ai-change exit=$CHG" >&2; failed=1; fi
+          if [ ! -s ai-test.sarif ]; then echo "AI_GATE_NO_SARIF gate=ai-test" >&2; failed=1; fi
+          if [ ! -s ai-change.sarif ]; then echo "AI_GATE_NO_SARIF gate=ai-change" >&2; failed=1; fi
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            if [ "$REL" -ne 0 ]; then echo "AI_GATE_CRASH gate=ai-release exit=$REL" >&2; failed=1; fi
+            if [ ! -s ai-release.sarif ]; then echo "AI_GATE_NO_SARIF gate=ai-release" >&2; failed=1; fi
+          fi
+          exit "$failed"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ai-audit-sarif

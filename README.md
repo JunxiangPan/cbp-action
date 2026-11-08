@@ -168,6 +168,39 @@ python -m cbp.cli errata --body corrected.md --check
 original text. It never edits GitHub: the owner reviews the diff and runs
 `gh release edit <tag> --notes-file corrected.md`.
 
+### Rule packs
+
+```bash
+python -m cbp.cli --root . --rules-path rules/cbe-pack.json --rules-sha256 <hex>
+```
+
+The pack is loaded into the custom gate. A missing file, invalid JSON, a missing
+`name`/`version`/`rules`, or a hash mismatch is an input error (exit 2). The
+action exposes the same knobs as `rules-path` / `rules-sha256`.
+
+### Encoding allowlist
+
+Windows PowerShell 5.1 needs a BOM to read non-ASCII scripts. Such files can be
+exempted one path at a time, with a reason; there are no wildcards.
+
+```json
+"encoding_allowlist": [
+  {"path": "build/legacy.ps1", "reason": "Windows PowerShell 5.1 requires BOM for CJK"}
+]
+```
+
+Absolute paths, wildcards, duplicate entries, missing reasons, and entries that
+match no tracked text file are rejected. A passing run reports
+`allowlisted=N`; an allowlisted file without a BOM is reported as
+`allowlist_unused=N`.
+
+### Release asset manifest
+
+`--verify-release` reads `<root>/dist/RELEASE_ASSETS.sha256` by default. Pass
+`--release-assets PATH` when the inventory lives elsewhere; a missing file is an
+input error (exit 2). Network failures (timeouts, HTTP 5xx) are infrastructure
+failures: exit 3 with `GATE_STATUS=SKIPPED_INFRA`, and publish stays blocked.
+
 ## Configuration
 
 See [`schemas/config.schema.json`](schemas/config.schema.json).

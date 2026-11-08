@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — CONTRACT v1.7 stage 0
+## 1.1.0 — 2026-11-09
 
 - `report_schema.py`: the six CONTRACT §3 gate statuses, the §1 exit-code table
   (0/2/3/4), bare-64-hex hash validation, and quality-manifest v1.7 field
@@ -15,9 +15,29 @@
   `blocking_skip` and exits 3. More than 20% skipped exits 4. `audit`/`warn`
   still exit 0 but print `contract_exit_code` and `publishable=false`.
 - New CLI flags: `--report-json` (writes a parseable gate report), `--parse-report`
-  (validation only), `--observed-exit-code` (F1 exit-code consistency).
-- `--jobs` now spawns real parallel execution again; it is no longer ignored.
-- Config gains `package_type`; this repository declares `"package_type": "cbp"`.
+  (validation only), `--observed-exit-code` (F1 exit-code consistency),
+  `--rules-path` / `--rules-sha256` (CBE rule pack; missing or unparseable is
+  exit 2), and `--release-assets` (explicit asset inventory for
+  `--verify-release`).
+- Quality manifest now carries the CONTRACT v1.7 fields (`schema_version`,
+  `package_id`, `producer_id`, `version`, `gate_status`,
+  `applicable_gate_count`, `skip_count`, `skip_ratio`, `blocking_skip`,
+  `gates[]`, `artifact_hashes`, `release_body_hash`, `evidence_sha256`) plus the
+  §4 CI binding (`ci_run_id`, `ci_commit_sha`). `claims` and
+  `verify_manifest_artifact` read the gate array.
+- `--require-gate-pass`: publish fails unless the manifest is `PASS`, has no
+  blocking skip, and its skip ratio is at most 20%.
+- `SKIPPED_INFRA`: GitHub API timeouts / HTTP 5xx during `--verify-release` exit
+  3 with `GATE_STATUS=SKIPPED_INFRA`; the release body generator can render a
+  dedicated Infrastructure failures section.
+- Encoding allowlist: exact per-path BOM exemptions with a required reason and
+  visible counts (`allowlisted=N`, `allowlist_unused=N`). Wildcards, absolute
+  paths, duplicates, and stale entries are rejected.
+- `--jobs` executes in parallel again instead of being silently ignored.
+- The `ai-audit` job no longer ends with an unconditional `exit 0`: a crashing
+  gate or a missing SARIF file fails the job, while audit findings stay visible.
+- Config gains `package_type` and `encoding_allowlist`; this repository declares
+  `"package_type": "cbp"`.
 - New `cbp errata` command: prefixes a body with the machine-readable `ERRATUM:`
   token (F4), preserves the original bytes, reports any trailing ERRATUM section
   as human-readable only, and prints a unified diff. It never edits GitHub.

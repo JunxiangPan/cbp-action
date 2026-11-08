@@ -224,7 +224,14 @@ MANIFEST_REQUIRED_FIELDS = (
     "evidence_sha256",
 )
 
-MANIFEST_ALLOWED_FIELDS = frozenset(MANIFEST_REQUIRED_FIELDS) | {"producer_id"}
+MANIFEST_ALLOWED_FIELDS = frozenset(MANIFEST_REQUIRED_FIELDS) | {
+    "producer_id",
+    # CONTRACT §4 publish preconditions bind the manifest to a CI run and a commit.
+    "ci_run_id",
+    "ci_commit_sha",
+    "generated_at",
+    "generated_by",
+}
 
 
 def validate_manifest(manifest: Any, *, require_producer: bool = False) -> list[str]:

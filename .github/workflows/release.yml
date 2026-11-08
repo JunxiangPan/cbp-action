@@ -77,7 +77,7 @@ jobs:
           CI_RUN_ID: ${{ inputs.ci_run_id }}
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          python tools/verify_manifest_artifact.py --manifest=artifact/quality-manifest.json --hash=artifact/quality-manifest.json.sha256 --notes=artifact/docs/RELEASE_NOTES.generated.md --run-id="$CI_RUN_ID" --commit-sha="$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
+          python tools/verify_manifest_artifact.py --manifest=artifact/quality-manifest.json --hash=artifact/quality-manifest.json.sha256 --notes=artifact/docs/RELEASE_NOTES.generated.md --run-id="$CI_RUN_ID" --commit-sha="$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" --require-gate-pass
       - name: Check Action metadata files
         run: |
           pwd
