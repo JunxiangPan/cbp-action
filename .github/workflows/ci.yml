@@ -168,7 +168,9 @@ jobs:
           name: quality-manifest-${{ github.run_id }}
           path: .
       - name: Emit SARIF
-        run: python -m cbp.cli --root . --sarif-output cbp.sarif || true
+        run: |
+          python -m cbp.cli --root . --sarif-output cbp.sarif
+          test -s cbp.sarif
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: cbp-sarif
