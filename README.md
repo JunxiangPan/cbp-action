@@ -201,6 +201,47 @@ match no tracked text file are rejected. A passing run reports
 input error (exit 2). Network failures (timeouts, HTTP 5xx) are infrastructure
 failures: exit 3 with `GATE_STATUS=SKIPPED_INFRA`, and publish stays blocked.
 
+### 1.2.0 rules
+
+```bash
+python -m cbp.cli --root . --v12 --v12-report v12-report.json
+python -m cbp.cli --root . --v12 --v12-only CBP-CI-001
+python -m cbp.cli --root . --v12 --waivers waivers.json --v12-baseline baseline.json
+```
+
+Twelve rules: six blocking (`CBP-CI-001`, `CBP-VER-001`, `CBP-QA-001`,
+`CBP-DEBT-001`, `CBP-SIGN-001`, `CBP-WT-001`) and six warning
+(`CBP-BIN-001`, `CBP-DOC-001`, `CBP-CLAIM-001`, `CBP-COV-001`,
+`CBP-PROOF-001`, `CBP-SLOP-001`). Blocking failure exits 3; warning-only
+failure exits 0 with a visible `WARN` until 1.2.1.
+
+A waiver or baseline entry needs all four fields; an expired one is not applied
+and is printed:
+
+```json
+{"rule": "CBP-DOC-001", "path": "docs/old.md", "reason": "archived", "expires": "2026-12-31"}
+```
+
+### body_hash_scope and artifact_repository
+
+The manifest now carries `body_hash_scope: "base"` (only `base` is supported;
+`full` is exit 2) and, when configured, `artifact_repository`. Pass
+`--artifact-repository owner/repo` or set `GITHUB_REPOSITORY`; a consumer can
+reject a cross-repository artifact with
+`--parse-report --expected-repository owner/repo`.
+
+### cbc-event
+
+Emission is disabled by default. Enable a local JSONL chain with:
+
+```bash
+python -m cbp.cli --root . --cbc-event-dir .cbp/events --cbc-event-max 500
+```
+
+Events are `cbp.run.start`, `cbp.gate.result` and `cbp.run.end`, chained by
+`prev_hash` / `event_hash`. `--cbc-event-hmac-env NAME` reads an HMAC-SHA256 key
+from the environment. Dropped events are counted and printed, never silent.
+
 ## Configuration
 
 See [`schemas/config.schema.json`](schemas/config.schema.json).

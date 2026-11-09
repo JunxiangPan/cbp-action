@@ -191,6 +191,11 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
     parser.add_argument("--cbc-event-dir", default="")
     parser.add_argument("--cbc-event-max", type=int, default=1000)
     parser.add_argument("--cbc-event-hmac-env", default="")
+    parser.add_argument("--v12", action="store_true")
+    parser.add_argument("--v12-report", default="")
+    parser.add_argument("--v12-only", default="")
+    parser.add_argument("--waivers", default="")
+    parser.add_argument("--v12-baseline", default="")
     args = parser.parse_args(argv)
     if args.body_hash_scope and args.body_hash_scope not in report_schema.BODY_HASH_SCOPES:
         print(json.dumps({
@@ -282,6 +287,49 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
         value = getattr(args, key)
         if value is not None:
             overrides[key] = value
+    if args.v12:
+        from . import v12_rules
+        only = {item.strip() for item in args.v12_only.split(",") if item.strip()} if args.v12_only else None
+        try:
+            results, expired = v12_rules.run_rules(
+                Path(args.root),
+                only=only,
+                waivers_path=args.waivers or None,
+                baseline_path=args.v12_baseline or None,
+            )
+        except v12_rules.RuleConfigError as exc:
+            print(json.dumps({
+                "gate_status": "FAIL",
+                "exit_code": report_schema.EXIT_INPUT,
+                "error": str(exc),
+            }, ensure_ascii=False))
+            return report_schema.EXIT_INPUT
+        payload = v12_rules.report(results, expired)
+        for result in results:
+            suffix = ""
+            if result.waived:
+                suffix += f" waived={len(result.waived)}"
+            if result.baselined:
+                suffix += f" baselined={len(result.baselined)}"
+            print(f"{result.rule_id} {result.name}: {result.status}{suffix}")
+            for finding in result.findings:
+                print(f"  {finding}")
+        if expired:
+            print(f"V12_EXPIRED_ENTRIES={len(expired)}")
+            for item in expired:
+                print(f"  EXPIRED {item}")
+        if args.v12_report:
+            Path(args.v12_report).write_text(
+                json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+            )
+        blocking = bool(payload["summary"]["blocking_failed"])
+        warning = bool(payload["summary"]["warning_failed"])
+        print(
+            f"CBP_V12_RESULT={'FAIL' if blocking else ('WARN' if warning else 'PASS')} "
+            f"rules={len(results)} blocking_failed={str(blocking).lower()} "
+            f"warning_failed={str(warning).lower()}"
+        )
+        return report_schema.EXIT_GATE if blocking else report_schema.EXIT_PASS
     try:
         cfg = load_config(Path(args.root), config_path, overrides)
     except (OSError, ValueError, RuntimeError) as exc:

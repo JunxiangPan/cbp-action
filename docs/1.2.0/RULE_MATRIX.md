@@ -53,18 +53,18 @@ Severity: **B** = blocking (1.2.0), **W** = warning + baseline (1.2.0), blocking
 
 | ID | Rule | Sev | Failure condition | Fixtures (pass / fail / false-positive guard) | Status |
 | --- | --- | --- | --- | --- | --- |
-| CBP-CI-001 | `TEST_ROOTS_IN_CI` | B | a test root is never executed by any CI workflow | `ci_all_roots` / `ci_missing_root` / `root_in_comments` | planned |
-| CBP-VER-001 | `VERSION_SYNC` | B | VERSION, pyproject, config and CHANGELOG disagree | `versions_synced` / `version_mismatch` / `changelog_old_entries` | planned |
-| CBP-QA-001 | `QA_COUNTS_CONSISTENT` | B | declared counts ≠ row statuses; `Covered: 0` contradicts coverage disclosure | `qa_consistent` / `qa_count_mismatch` / `qa_covered_zero_with_coverage` | planned |
-| CBP-DEBT-001 | `DEBT_EVIDENCE` | B | FIXED / NOT_FIXED entry has no file or number | `debt_with_evidence` / `debt_without_evidence` / `debt_word_in_prose` | planned |
-| CBP-SIGN-001 | `SIGN_TOOLS_IN_TAG` | B | sign workflow references a script absent from the tag tree | `sign_tools_present` / `sign_tool_missing` / `script_in_comment` | planned |
-| CBP-WT-001 | `WORKTREE_CLEAN_AFTER_GATES` | B | tracked files changed by a gate run | `wt_clean` / `wt_dirty` / `untracked_only` | planned |
-| CBP-BIN-001 | `BINARY_AUTHENTICODE` | W | installer exe unsigned and no waiver | `exe_signed` / `exe_unsigned` / `no_exe` | planned |
-| CBP-DOC-001 | `DOC_REFERENCES_EXIST` | W | doc references a missing test/file path | `doc_refs_ok` / `doc_ref_missing` / `example_path` | planned |
-| CBP-CLAIM-001 | `CAPABILITY_CLAIMS` | W | enforce/isolation claim without implementation or `audit-only` marker | `claim_backed` / `claim_unbacked` / `quoted_claim` | planned |
-| CBP-COV-001 | `COVERAGE_HARD` | W | coverage threshold downgraded to warning/0 | `cov_hard` / `cov_downgraded` / `cov_other_gate` | planned |
-| CBP-PROOF-001 | `PROOF_HIGH_TIER` | W | proof lacks SCM/ACL/service-account markers and no waiver | `proof_high` / `proof_low` / `proof_other_format` | planned |
-| CBP-SLOP-001 | `DOCSTRING_SLOP` | W | template docstrings above the configured threshold | `slop_below` / `slop_above` / `slop_quoted` | planned |
+| CBP-CI-001 | `TEST_ROOTS_IN_CI` | B | a test root is never executed by any CI workflow | `ci_all_roots` / `ci_missing_root` / `root_in_comments` | implemented |
+| CBP-VER-001 | `VERSION_SYNC` | B | VERSION, pyproject, config and CHANGELOG disagree | `versions_synced` / `version_mismatch` / `changelog_old_entries` | implemented |
+| CBP-QA-001 | `QA_COUNTS_CONSISTENT` | B | declared counts ≠ row statuses; `Covered: 0` contradicts coverage disclosure | `qa_consistent` / `qa_count_mismatch` / `qa_covered_zero_with_coverage` | implemented |
+| CBP-DEBT-001 | `DEBT_EVIDENCE` | B | FIXED / NOT_FIXED entry has no file or number | `debt_with_evidence` / `debt_without_evidence` / `debt_word_in_prose` | implemented |
+| CBP-SIGN-001 | `SIGN_TOOLS_IN_TAG` | B | sign workflow references a script absent from the tag tree | `sign_tools_present` / `sign_tool_missing` / `script_in_comment` | implemented |
+| CBP-WT-001 | `WORKTREE_CLEAN_AFTER_GATES` | B | tracked files changed by a gate run | `wt_clean` / `wt_dirty` / `untracked_only` | implemented |
+| CBP-BIN-001 | `BINARY_AUTHENTICODE` | W | installer exe unsigned and no waiver | `exe_signed` / `exe_unsigned` / `no_exe` | implemented |
+| CBP-DOC-001 | `DOC_REFERENCES_EXIST` | W | doc references a missing test/file path | `doc_refs_ok` / `doc_ref_missing` / `example_path` | implemented |
+| CBP-CLAIM-001 | `CAPABILITY_CLAIMS` | W | enforce/isolation claim without implementation or `audit-only` marker | `claim_backed` / `claim_unbacked` / `quoted_claim` | implemented |
+| CBP-COV-001 | `COVERAGE_HARD` | W | coverage threshold downgraded to warning/0 | `cov_hard` / `cov_downgraded` / `cov_other_gate` | implemented |
+| CBP-PROOF-001 | `PROOF_HIGH_TIER` | W | proof lacks SCM/ACL/service-account markers and no waiver | `proof_high` / `proof_low` / `proof_other_format` | implemented |
+| CBP-SLOP-001 | `DOCSTRING_SLOP` | W | template docstrings above the configured threshold | `slop_below` / `slop_above` / `slop_quoted` | implemented |
 
 Every rule ships: positive fixture, negative fixture, false-positive guard fixture, JSON finding with rule id + path, exit-code assertion, and waiver test.
 
@@ -82,10 +82,10 @@ Every rule ships: positive fixture, negative fixture, false-positive guard fixtu
 
 - [x] Step 0: baseline, branch, this file
 - [x] Step 1: `body_hash_scope`, `artifact_repository`, cbc-event emitter
-- [ ] Step 2: rules 1–6 with fixtures and tests
-- [ ] Step 3: rules 7–12 with warning baseline and expiry
-- [ ] Step 4: read-only E2E matrix across CBS/CBE/CBM/CBC + consumer parity
-- [ ] Step 5: 1.2.0 RC wheel/sdist, CHANGELOG/README/UPGRADING, no publish
+- [x] Step 2: rules 1–6 with fixtures and tests
+- [x] Step 3: rules 7–12 with warning baseline and expiry
+- [x] Step 4: read-only E2E matrix across CBS/CBE/CBM/CBC + consumer parity (docs/1.2.0/E2E_MATRIX.md)
+- [ ] Step 5: 1.2.0 RC wheel/sdist, CHANGELOG/README/UPGRADING, no publish (in progress)
 - [ ] Step 6: audit package, stop for human audit
 
 ## Step 1 implementation notes
