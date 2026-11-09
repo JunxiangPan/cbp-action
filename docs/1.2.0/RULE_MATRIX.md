@@ -85,8 +85,8 @@ Every rule ships: positive fixture, negative fixture, false-positive guard fixtu
 - [x] Step 2: rules 1–6 with fixtures and tests
 - [x] Step 3: rules 7–12 with warning baseline and expiry
 - [x] Step 4: read-only E2E matrix across CBS/CBE/CBM/CBC + consumer parity (docs/1.2.0/E2E_MATRIX.md)
-- [ ] Step 5: 1.2.0 RC wheel/sdist, CHANGELOG/README/UPGRADING, no publish (in progress)
-- [ ] Step 6: audit package, stop for human audit
+- [x] Step 5: 1.2.0 RC wheel/sdist + attestation, CHANGELOG/README/UPGRADING, no publish
+- [x] Step 6: audit package (docs/1.2.0/AUDIT_PACKAGE.md), stopped for human audit
 
 ## Step 1 implementation notes
 
