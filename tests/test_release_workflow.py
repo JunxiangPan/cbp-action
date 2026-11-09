@@ -43,6 +43,11 @@ def test_publish_remints_and_checks_the_manifest() -> None:
     assert "--check-only" in text
 
 
+def test_ai_gate_sees_the_release_asset_manifest() -> None:
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "cp rc/RELEASE_ASSETS.sha256 dist/RELEASE_ASSETS.sha256" in text
+
+
 def test_clean_verify_downloads_rc_artifact() -> None:
     text = WORKFLOW.read_text(encoding="utf-8")
     assert 'gh run download "$RC_RUN_ID" -n cbp-rc -D dist-verify' in text

@@ -232,6 +232,10 @@ jobs:
         run: |
           cd rc
           sha256sum *.whl *.tar.gz ../artifact/quality-manifest.json ../artifact/quality-manifest.json.sha256 ../artifact/docs/RELEASE_NOTES.generated.md | awk '{n=$2; sub(/.*\//,"",n); print $1 " *" n}' > RELEASE_ASSETS.sha256
+      - name: Expose the release asset manifest to the AI gate
+        run: |
+          mkdir -p dist
+          cp rc/RELEASE_ASSETS.sha256 dist/RELEASE_ASSETS.sha256
       - name: Upload the release body used for publishing
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
