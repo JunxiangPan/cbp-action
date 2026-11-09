@@ -4,6 +4,8 @@ name: cbp-rc
 # GitHub Release stay untouched; the attestation and hashes are the hand-off
 # artifacts for human audit.
 on:
+  push:
+    branches: [1.2.0-dev]
   workflow_dispatch:
     inputs:
       ref:
