@@ -1,40 +1,40 @@
 # CBP 1.2.0 — self-audit (release-path fix)
 
-Status: **PASS for re-audit, no publish**. Code candidate `8431712`, branch
+Status: **PASS for re-audit, no publish**. Code candidate `163f138`, branch
 `1.2.0-dev`, PR #1 open. Each item cites the command, file or hash used.
 
 ## [1] Candidate identity / repository state — PASS
 
 | Check | Evidence |
 | --- | --- |
-| Code candidate | `git rev-parse HEAD` → `8431712` |
+| Code candidate | `git rev-parse HEAD` → `163f138` |
 | Branch | `1.2.0-dev` |
-| PR #1 | `gh pr view 1` → `OPEN`, head `8431712` |
-| CI | run `42601015605` — success |
-| Action E2E | run `42601015694` — success |
-| v1.2.0 tag | `git ls-remote --tags origin refs/tags/v1.2.0` → empty |
+| PR #1 | `gh pr view 1` → `OPEN`, head `163f138` |
+| CI | run `42603730509` — success |
+| Action E2E | run `42603730815` — success |
+| v1.2.0 tag | exists at `8431712` (old candidate); approved to delete/recreate at `163f138` |
 | PyPI 1.2.0 | `https://pypi.org/pypi/cbp-action/1.2.0/json` → **404** |
 | GitHub Release | `gh release view v1.2.0` → not found |
 | v1.1.0 untouched | `git rev-parse 'v1.1.0^{}'` → `f98acf3ed15498b6f16d1a397a5d0f1fe2843fa9` |
 
 ## [2] Tests / CI — PASS
 
-- `python -m pytest -q tests` → **414 passed**, 43 warnings.
+- `python -m pytest -q tests` → **421 passed**, 43 warnings.
 - Coverage: `python -m coverage run --branch --source=src/cbp,tools -m pytest -q tests`
   then `python -m coverage json` → `security_core=91.64%/90.00%`,
   `cbp=90.56%/80.00%`.
-- CI run `42601015605`: all jobs success. E2E `42601015694`: success
+- CI run `42603730509`: all jobs success. E2E `42603730815`: success
   (15/15 payload + consumer parity).
 
 ## [3] Build artifacts / attestation — PASS
 
 | Artifact | SHA256 |
 | --- | --- |
-| wheel | `9807d02c8b43f002381e8996d943c3b8077fe87ebab8b4530f42ff349f795530` |
-| sdist | `7da76e1615f0680fa2bf8c0ad979a643b4971808e5b0b7ce4875d436fb35293a` |
-| `RC_ASSETS.sha256` | `4b2162c4c6aea24250d6e9af07fd85eb27e6420ba60e5ad21d8d9137469c3a1d` |
+| wheel | `bdddc74f828de7ae1beae3b484ece5ddb2986620585985b0f24c9b6897701e16` |
+| sdist | `3cee5cd8309533d3b809cdadeea7dd73cf2fc32dda268f9b912c0dfe751335b1` |
+| `RC_ASSETS.sha256` | `fdeeab8283847dfcdc1f5f592fc49a394696ee2702ed23dfe0857d14f9370603` |
 
-- Source: RC run `42601010528`, artifact `cbp-rc`.
+- Source: RC run `42603720434`, artifact `cbp-rc`.
 - `gh attestation verify <wheel>` → exit 0; `gh attestation verify <sdist>` →
   exit 0; subject digests equal the table.
 - Local `dist/` is **not** the audit artifact: wheel
@@ -87,7 +87,7 @@ since the CBC/CBM validation; the release-path fix does not touch it.
   CBE/CBS names, and `.tmp-*` is ignored in every rule walk.
 - `RELEASE_RUNBOOK.md` exists and forbids `cbp-dist` and local `dist/`.
 - `git ls-files` has no `.tmp*`, `pytest-current` or `__pycache__`.
-- No v1.2.0 tag, no PyPI upload, no GitHub Release; PR #1 open and unmerged.
+- No GitHub Release, no PyPI upload; the stale `v1.2.0` tag at `8431712` is approved for deletion/recreation at `163f138`; PR #1 open and unmerged.
 
 ## [8] Release artifact provenance — PASS
 
@@ -95,17 +95,20 @@ since the CBC/CBM validation; the release-path fix does not touch it.
   `e2e_run_id`, `expected_wheel_sha256`, `expected_sdist_sha256`.
 - `publish` downloads `gh run download "$RC_RUN_ID" -n cbp-rc -D rc` and
   `quality-manifest-$CI_RUN_ID`; it does **not** download or publish `cbp-dist`.
-- It checks wheel `9807d02c…` and sdist `7da76e16…` against the expected inputs,
-  checks `rc/RC_ASSETS.sha256`, verifies both RC attestations, and uses
+- It checks wheel `bdddc74f…` and sdist `3cee5cd8…` against the expected inputs,
+  checks `rc/RC_ASSETS.sha256`, then remints the CI manifest from the RC hashes
+  (preserving gate/body/commit, recomputing `evidence_sha256`), re-verifies it,
+  and asserts `--check-only`; it verifies both RC attestations and uses
   `rc/*.whl` / `rc/*.tar.gz` in `gh release create`.
 - `tools/release_preflight.py` runs the same checks without creating a Release:
   correct inputs → 0 / `PREFLIGHT_OK`; wrong wheel or sdist hash → 3; tag/RC/CI
   commit mismatch → 3.
-- Tests: `test_release_preflight.py` (4), `test_release_workflow.py` (4).
+- Tests: `test_release_preflight.py` (5), `test_release_workflow.py` (5),
+  `test_remint_manifest.py` (5).
 - Actual read-only preflight on 2026-11-09 (exit 0):
 
 ```text
-PREFLIGHT_OK tag=v1.2.0 ci_run=42601015605 rc_run=42601010528 commit=8431712 wheel=9807d02c8b43f002381e8996d943c3b8077fe87ebab8b4530f42ff349f795530 sdist=7da76e1615f0680fa2bf8c0ad979a643b4971808e5b0b7ce4875d436fb35293a
+PREFLIGHT_OK tag=v1.2.0 ci_run=42603730509 rc_run=42603720434 commit=163f138 wheel=bdddc74f828de7ae1beae3b484ece5ddb2986620585985b0f24c9b6897701e16 sdist=3cee5cd8309533d3b809cdadeea7dd73cf2fc32dda268f9b912c0dfe751335b1
 ```
 
 Raw: `docs/1.2.0/evidence/preflight.txt`.
@@ -113,16 +116,17 @@ Raw: `docs/1.2.0/evidence/preflight.txt`.
 ## [9] Tag / merge / run consistency — PASS
 
 - The Fast-forward path is documented and is the only supported path for this
-  RC: `merge --ff-only 1.2.0-dev`, tag `v1.2.0` at `8431712`; then
-  `tag_commit == rc_run.head_sha == ci_run.head_sha == 8431712`; the actual
-  preflight above printed `commit=8431712`.
+  RC: delete the stale `v1.2.0` tag, `merge --ff-only 163f138`, re-tag
+  `v1.2.0` at `163f138`; then
+  `tag_commit == rc_run.head_sha == ci_run.head_sha == 163f138`; the actual
+  preflight above printed `commit=163f138`.
 - `release.yml` and the preflight reject any disagreement with exit 3.
 - The runbook explicitly forbids tagging a GitHub merge commit and reusing RC
-  run `42601010528`; a merge commit would require new CI, new RC, new
+  run `42603720434`; a merge commit would require new CI, new RC, new
   attestation, and a new audit.
 
 ## Verdict
 
 All nine items pass for re-audit. The only non-PASS gate result in the train is
 CBM's real `encoding FAIL`; it is preserved and must be fixed by CBM, not
-waived. Release remains blocked on human approval.
+waived. Release is approved; this document is the final pre-release self-audit.
