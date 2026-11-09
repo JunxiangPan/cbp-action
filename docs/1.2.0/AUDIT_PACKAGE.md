@@ -8,53 +8,55 @@ GitHub Release. Merging the draft PR, tagging, and publishing are owner actions.
 | Item | Value |
 | --- | --- |
 | Branch | `1.2.0-dev` |
-| RC commit | `855fed7` (external-package manifest generator) |
+| RC commit | `72252b4` (target-scoped gate provenance for external manifests) |
 | Draft PR | https://github.com/JunxiangPan/cbp-action/pull/1 |
-| PR CI | run `42589469342` (candidate) + run `42591939778` (docs HEAD `402a146`) — success |
-| Action E2E | run `42589469408` (candidate) + run `42591939751` (docs HEAD `402a146`) — success |
-| RC build + attest | run `42589460728` attempt 2 — success (final rebuild) |
-| wheel | `cbp_action-1.2.0-py3-none-any.whl`<br>`9469a8e980a536e9481e0b14239cd4857a5cd6173a61043d47645b82cf3b4d51` |
-| sdist | `cbp_action-1.2.0.tar.gz`<br>`98b8916ce26d84b38e492182eda8eba75d0ec8bb03c5ffb6d9001a0c2d7b405b` |
+| PR CI | run `42596785338` — success |
+| Action E2E | run `42596785416` — success (15/15 payload + consumer parity) |
+| RC build + attest | run `42596772450` — success |
+| wheel | `cbp_action-1.2.0-py3-none-any.whl`<br>`ee365cdde99c6ec453703fbf7dfb74617da9b65fff28b4350e8eebad93c7b6fb` |
+| sdist | `cbp_action-1.2.0.tar.gz`<br>`870b52860f8b1a9b6a71300455229084fa0d83456255a1742038804abee16b26` |
 | Attestation | `gh attestation verify` exit 0 for both; subject digest equals the local hash; repository `JunxiangPan/cbp-action` |
 | PyPI | `https://pypi.org/pypi/cbp-action/1.2.0/json` → **404** |
 | GitHub Release | `v1.2.0` → **not found** |
 
-Post-RC owner request (2026-11-09): extend CBP-WT-001 to reject conflict markers
-in tracked files, add the clean/committed-marker fixtures, and run a real E2E
-against CBS `contract/v1.7.1`. That change produced commit `9ee52fb`; a follow-up removed accidentally
-tracked `.tmp-*` reports and fixed the ignore rule, producing `bb8d4d6`. A second post-RC request added the external-package
-manifest generator, producing `855fed7`, the current candidate. It supersedes
-`5da8b87`. The E2E failed as expected on three
-committed markers in CBS `.github/workflows/vm-proof.yml:15/16/18`
-(`docs/1.2.0/E2E_MATRIX.md`).
+Post-RC history: `9ee52fb` added conflict markers to CBP-WT-001, `bb8d4d6`
+fixed temp-file hygiene, `855fed7` added the external-package manifest
+generator, and `72252b4` is the current candidate. `72252b4` fixes the audit
+finding that CBC/CBM gate reports were CBP-self reports: the gate report now
+carries the target `package_id`/`producer_id`/`version`, and `cbp manifest`
+rejects an identity mismatch with exit 2 before writing anything. Earlier
+candidates `5da8b87`, `9ee52fb`, `bb8d4d6` and `855fed7` are superseded.
 
 The RC workflow builds and attests only; it never uploads to a package index or
 creates a release (`attest-build-provenance` + artifact upload).
 
 ## Test evidence
 
-- Local: **402 passed**, 43 warnings.
-- CI coverage: `security_core=91.64%/90.00%`, `cbp=90.55%/80.00%`.
+- Local: **406 passed**, 43 warnings.
+- CI coverage: `security_core=91.64%/90.00%`, `cbp=90.56%/80.00%`.
 - `docs/1.2.0/E2E_MATRIX.md`: 5 repositories × 12 rules, read-only, plus the
   requested CBS `contract/v1.7.1` E2E (exit 3, three committed conflict
   markers in `.github/workflows/vm-proof.yml:15/16/18`).
 
 ## External-package manifest (post-RC request)
 
-`cbp manifest` now writes a CONTRACT §5 manifest for a subject package using a
-real gate report plus that package's artifacts and body. Real E2E, read-only:
+`cbp manifest` writes a CONTRACT §5 manifest for a subject package using a
+target-scoped gate report plus that package's artifacts and body. The gate
+report is produced on the target root with
+`--package-id/--producer-id/--version`; a CBP-self report is rejected.
 
-| Target | Generated manifest | Target-side check |
-| --- | --- | --- |
-| CBC `48d9762` | `f897bc905d4cebfa82cc83f137440cb0a024e0dd060eaa022bca1fb7a3942724`, `package_id cbc`, `producer_id cbp`, base scope | `cbc_viewer.reports.validate_cbp` → PASS, base body hash matches |
-| CBM `45c49bc` | `bc5461e61a4167dfae21fdf12fe169fa8339c7f20eac09f861799d89926196c1`, `package_id cbm`, `producer_id cbp`, base scope | `cbm_attach.reports.load_report` → PASS; B3 fields complete |
+| Target | Gate report | Generated manifest | Target-side check |
+| --- | --- | --- | --- |
+| CBC `11943f14` | `213e8243…` (`cbc`/`cbp`/`v0.1.0`, PASS) | `01438d31067f05508454c81af068efc61c9797034c778746b94d77e3de63bac0` | `validate_cbp` → PASS |
+| CBM `8acb628` | `ac4d243b…` (`cbm`/`cbp`/`v0.1.0`, **FAIL**) | `967f15ccd8f222518ceb3c613ffda8d4f2ed04cfede958485f0bd79531e410cb` | `load_report` → PASS; B3 fields complete; `FAIL` preserved |
 
-CBC's CBP input blocker is removed. R02–R19 were run on a real release dir:
-18/18 assertions matched (17 executed; R16 skipped on Windows); R01 needs an
-actual upload and is NOT RUN. CBM B3 is field-level complete; **B2 is not
-claimed**. Evidence: `docs/1.2.0/evidence/cbc-r01-r19/`.
-Details and evidence files: `docs/1.2.0/EXTERNAL_MANIFEST.md`,
-`docs/1.2.0/evidence/`.
+CBC manifests `f897bc90…` (historical) and `5f952d9b…` (earlier R01–R19)
+precede the current `01438d31…`; `EXTERNAL_MANIFEST.md` records the same
+history. CBM's real gate finding is `encoding: FAIL` on
+`audit/v1.2.0-rc/b5-probe-declared.stdout.txt` (invalid UTF-8). It is not
+rewritten to PASS. CBC R02–R19: 18/18 assertions (17 executed; R16 skipped on
+Windows); R01 NOT RUN (no upload). CBM B3 is field-level complete; **B2 is not
+claimed**. Evidence: `docs/1.2.0/evidence/`.
 
 ## Twelve rules — fixtures, tests, exit codes
 
@@ -110,23 +112,27 @@ for their real E2E, so they must move to 1.2.0 before the train can pass.
 ## Unresolved items
 
 1. **Publish approval** — owner decision. No tag, no PyPI upload, no Release.
-2. **CBM CBP-CI-001** — true positive: CBM has no CI test job. It is outside
-   this repository and was not waived.
-3. **Warning baselines** — CBS (BIN 1, DOC 29), CBE (DOC 4), CBM (DOC 12) are
-   recorded in `E2E_MATRIX.md`. They are warnings in 1.2.0; 1.2.1 needs an
-   accepted baseline with expiry before they block.
+2. **CBM encoding FAIL** — the target-scoped gate on CBM `8acb628` fails on
+   `audit/v1.2.0-rc/b5-probe-declared.stdout.txt` (invalid UTF-8). This is a real
+   CBM finding, preserved in the CBM manifest; it is not waived and must be
+   fixed by CBM.
+3. **Warning baselines** — CBS (BIN 1, DOC 32), CBM (DOC 11). They are warnings
+   in 1.2.0; 1.2.1 needs an accepted baseline with expiry before they block.
 4. **RC rebuild policy** — the RC workflow ignores docs-only pushes
    (`paths-ignore: docs/**, *.md`). Code commits still rebuild and require
-   re-attestation. The candidate for this audit is `855fed7` / run
-   `42589460728`; earlier candidates are superseded.
+   re-attestation. The candidate for this audit is `72252b4` / run
+   `42596772450`; earlier candidates are superseded.
 
 ## Reproduction
 
 ```bash
 python -m pytest -q tests
 python -m cbp.cli --root . --v12 --v12-report v12-report.json
-gh run view 42589460728 --repo JunxiangPan/cbp-action
+gh run view 42596772450 --repo JunxiangPan/cbp-action
 gh attestation verify cbp_action-1.2.0-py3-none-any.whl --repo JunxiangPan/cbp-action
 ```
 
-Stop here. Human audit is required before tagging 1.2.0 or publishing.
+Self-audit: `docs/1.2.0/SELF_AUDIT.md`. Release steps that must not be executed
+without approval: `docs/1.2.0/RELEASE_RUNBOOK.md`.
+
+Stop here. Human re-audit is required before tagging 1.2.0 or publishing.
