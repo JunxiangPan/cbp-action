@@ -70,14 +70,16 @@ Target: `cbc-event` HEAD `48d9762` (read-only; artifacts built from a `git
 archive` copy in a temporary directory). Gate report: a real CBP 1.2.0 run on
 CBC (`PASS`, 1 applicable gate, 8 not-configured skips not counted).
 
-Generated manifest:
+The first run produced `f897bc905d4cebfa82cc83f137440cb0a024e0dd060eaa022bca1fb7a3942724`.
+For the R01–R19 run the artifacts were rebuilt, so the same `855fed7` generator
+was used again; the manifest used for the cases is
+`5f952d9bf82413520b87d31a41fba85f49e8242e203f83cc32e6c3d33a5cab20`:
 
 ```text
-sha256    f897bc905d4cebfa82cc83f137440cb0a024e0dd060eaa022bca1fb7a3942724
 package_id cbc, producer_id cbp, version v0.1.0
 body_hash_scope base, gate_status PASS
-release_body_hash dbd11c7fafe736213569ccaf17b35862fbb2913844765fb13d5e505394cb7e9f
-artifact_hashes 2 (cbc_event-0.1.0 wheel + sdist)
+release_body_hash f63a222681b1e8a67f8de06f693e877a66fd58fe68714819315e42cbe41156de
+artifact_hashes 2 (rebuilt cbc_event wheel + sdist)
 ```
 
 Validation with CBC's own code:
@@ -85,14 +87,18 @@ Validation with CBC's own code:
 ```text
 from cbc_viewer.reports import validate_cbp
 CBC_VALIDATE_CBP=PASS
-body_hash_matches_base=True
 ```
 
+Release-chain cases `R02`–`R19` were run with CBC's own `verify_release` on a
+release dir built from a real CBE report (minimal disclosed pack), the real CBC
+wheel/sdist and the real manifest: **18/18 assertions matched** (17 executed;
+R16 skipped on Windows because symlink creation needs a privilege). `R01` needs
+an actually uploaded release and is **NOT RUN**; no upload is claimed. See
+`docs/1.2.0/evidence/cbc-r01-r19/`.
+
 The manifest blocker recorded in `cbc-event/audit/0.1.0-rc/CBP_MANIFEST_GAP.md`
-is removed. R01–R19 can now start; the CBP input is real. The remaining R01–R19
-inputs are CBC-owned: a real CBE §5 report for CBC and the official base body.
-The body used here is assembled from the real CBC CHANGELOG and is labelled as
-such; it is not an official GitHub Release body (CBC has no release).
+is removed. The body used here is assembled from the real CBC CHANGELOG and is
+labelled as such; it is not an official GitHub Release body (CBC has no release).
 
 ## Real E2E — CBM (B3 only)
 

@@ -10,8 +10,8 @@ GitHub Release. Merging the draft PR, tagging, and publishing are owner actions.
 | Branch | `1.2.0-dev` |
 | RC commit | `855fed7` (external-package manifest generator) |
 | Draft PR | https://github.com/JunxiangPan/cbp-action/pull/1 |
-| PR CI | run `42589469342` (candidate) + run `42589933628` (docs HEAD) — success |
-| Action E2E | run `42589469408` (candidate) + run `42589933541` (docs HEAD) — success |
+| PR CI | run `42589469342` (candidate) + run `42591939778` (docs HEAD `402a146`) — success |
+| Action E2E | run `42589469408` (candidate) + run `42591939751` (docs HEAD `402a146`) — success |
 | RC build + attest | run `42589460728` attempt 2 — success (final rebuild) |
 | wheel | `cbp_action-1.2.0-py3-none-any.whl`<br>`9469a8e980a536e9481e0b14239cd4857a5cd6173a61043d47645b82cf3b4d51` |
 | sdist | `cbp_action-1.2.0.tar.gz`<br>`98b8916ce26d84b38e492182eda8eba75d0ec8bb03c5ffb6d9001a0c2d7b405b` |
@@ -49,8 +49,10 @@ real gate report plus that package's artifacts and body. Real E2E, read-only:
 | CBC `48d9762` | `f897bc905d4cebfa82cc83f137440cb0a024e0dd060eaa022bca1fb7a3942724`, `package_id cbc`, `producer_id cbp`, base scope | `cbc_viewer.reports.validate_cbp` → PASS, base body hash matches |
 | CBM `45c49bc` | `bc5461e61a4167dfae21fdf12fe169fa8339c7f20eac09f861799d89926196c1`, `package_id cbm`, `producer_id cbp`, base scope | `cbm_attach.reports.load_report` → PASS; B3 fields complete |
 
-CBC's CBP input blocker is removed; R01–R19 still need CBC's real CBE report and
-official base body. CBM B3 is field-level complete; **B2 is not claimed**.
+CBC's CBP input blocker is removed. R02–R19 were run on a real release dir:
+18/18 assertions matched (17 executed; R16 skipped on Windows); R01 needs an
+actual upload and is NOT RUN. CBM B3 is field-level complete; **B2 is not
+claimed**. Evidence: `docs/1.2.0/evidence/cbc-r01-r19/`.
 Details and evidence files: `docs/1.2.0/EXTERNAL_MANIFEST.md`,
 `docs/1.2.0/evidence/`.
 

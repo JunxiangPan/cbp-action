@@ -146,7 +146,7 @@ built from `git archive` copies). Full detail: `docs/1.2.0/EXTERNAL_MANIFEST.md`
 
 | Target | Manifest | Target-side validation |
 | --- | --- | --- |
-| CBC `48d9762` | `f897bc905d4cebfa82cc83f137440cb0a024e0dd060eaa022bca1fb7a3942724`, `package_id cbc`, `producer_id cbp`, `v0.1.0`, base scope | `cbc_viewer.reports.validate_cbp` → PASS; `body_hash_matches_base=True` |
+| CBC `48d9762` | `5f952d9bf82413520b87d31a41fba85f49e8242e203f83cc32e6c3d33a5cab20`, `package_id cbc`, `producer_id cbp`, `v0.1.0`, base scope | `validate_cbp` → PASS; R02–R19: 18/18 assertions (R16 skipped on Windows); R01 NOT RUN (no upload) |
 | CBM `45c49bc` | `bc5461e61a4167dfae21fdf12fe169fa8339c7f20eac09f861799d89926196c1`, `package_id cbm`, `producer_id cbp`, `v0.1.0`, base scope | `cbm_attach.reports.load_report` → PASS; B3 fields complete |
 
 Boundaries: CBC R01–R19 have their CBP input, but still need CBC's real CBE
