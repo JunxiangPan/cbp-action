@@ -1,8 +1,26 @@
 # Changelog
 
-## 1.2.0 — RC (not released)
+## 1.2.1 — 2026-11-09
 
-Release candidate only: no PyPI upload and no GitHub Release until human audit.
+- Single canonical release-body hash (`body_hash_bytes`: UTF-8, BOM stripped,
+  LF, exactly one trailing newline). Generators, remint, verifier and
+  CBP-BODY-001 all call it.
+- `tools/remint_manifest.py --release-body` recomputes `release_body_hash` from
+  the exact body that will be uploaded; a missing body exits 2 and writes
+  nothing; a body different from CI is never silently preserved.
+- `release.yml` generates the body, remints the manifest from it, re-verifies,
+  and publishes that same body in one job (no cross-job body hash).
+- New blocking rule CBP-BODY-001 (13 rules total): fails when the manifest body
+  hash does not match the actual body; it fails on the v1.2.0 fixture and
+  passes on v1.2.1.
+- `docs/1.2.0/ERRATA.md` records the v1.2.0 body-hash mismatch and the stale
+  docs pointer. The v1.2.0 tag, PyPI 1.2.0 and Release body are not modified.
+- Documentation/schema/SHA pin fixes: 1.2.0 CHANGELOG entry is final; README
+  drops stale roadmap/VM wording; `schemas/manifest.schema.json` now validates
+  CONTRACT v1.7 manifests; tag pins remain rejected with the documented reason
+  and the full-40-hex alternative.
+
+## 1.2.0 — 2026-11-09
 
 - `body_hash_scope: "base"` in the quality manifest. Only `base` is supported;
   `full` or any unknown value is an input error (exit 2), and

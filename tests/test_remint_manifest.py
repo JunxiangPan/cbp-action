@@ -40,6 +40,8 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, list[Path]]:
     }
     path = tmp_path / "quality-manifest.json"
     path.write_text(json.dumps(manifest), encoding="utf-8")
+    body = tmp_path / "RELEASE_BODY.md"
+    body.write_text("# release\n\nbody\n", encoding="utf-8", newline="\n")
     return path, wheel, [wheel, sdist]
 
 
@@ -82,9 +84,43 @@ def test_remint_then_check_only_passes(tmp_path: Path, capsys) -> None:
     assert "REMIT_OK" in capsys.readouterr().out
 
 
-def test_missing_artifact_is_exit_3(tmp_path: Path) -> None:
+def test_missing_artifact_is_exit_2(tmp_path: Path) -> None:
     path, _wheel, _artifacts = _fixture(tmp_path)
-    assert rm.main(["--manifest", str(path), "--artifact", str(tmp_path / "missing.whl")]) == 3
+    assert rm.main(["--manifest", str(path), "--artifact", str(tmp_path / "missing.whl")]) == 2
+
+
+def test_remint_recomputes_body_hash(tmp_path: Path) -> None:
+    path, _wheel, artifacts = _fixture(tmp_path)
+    body = tmp_path / "RELEASE_BODY.md"
+    body.write_text("# release\n\nbody\n", encoding="utf-8", newline="\n")
+    before = json.loads(path.read_text(encoding="utf-8"))["release_body_hash"]
+    argv = ["--manifest", str(path), "--release-body", str(body)]
+    for artifact in artifacts:
+        argv += ["--artifact", str(artifact)]
+    assert rm.main(argv) == 0
+    after = json.loads(path.read_text(encoding="utf-8"))["release_body_hash"]
+    assert after != before
+    assert after == rm.canonical_body_hash(body.read_bytes())
+
+
+def test_remint_rejects_missing_body(tmp_path: Path) -> None:
+    path, _wheel, artifacts = _fixture(tmp_path)
+    argv = ["--manifest", str(path), "--release-body", str(tmp_path / "missing.md")]
+    for artifact in artifacts:
+        argv += ["--artifact", str(artifact)]
+    assert rm.main(argv) == 2
+
+
+def test_remint_preserves_artifact_hashes(tmp_path: Path) -> None:
+    path, wheel, artifacts = _fixture(tmp_path)
+    body = tmp_path / "RELEASE_BODY.md"
+    updated = rm.remint(
+        json.loads(path.read_text(encoding="utf-8")), artifacts, body.read_bytes()
+    )
+    assert updated["artifact_hashes"] == {
+        "cbp_action-1.2.0-py3-none-any.whl": _sha(wheel.read_bytes()),
+        "cbp_action-1.2.0.tar.gz": _sha((tmp_path / "cbp_action-1.2.0.tar.gz").read_bytes()),
+    }
 
 
 def test_commit_mismatch_is_exit_3(tmp_path: Path) -> None:

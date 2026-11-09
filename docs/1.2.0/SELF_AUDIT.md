@@ -43,7 +43,7 @@ Status: **PASS for re-audit, no publish**. Code candidate `5ebd0eb`, branch
   `c866d9a5d74aaf15b783aee61ea6c074370b8faf6e5987c313344b3f20534b88`. The
   runbook forbids publishing them.
 
-## [4] Twelve rules — PASS
+## [4] Thirteen rules — PASS
 
 - `python -m cbp.cli --root . --v12` → 12 PASS, `blocking_failed=false`.
 - 6 blocking: CI-001, VER-001, QA-001, DEBT-001, SIGN-001, WT-001.

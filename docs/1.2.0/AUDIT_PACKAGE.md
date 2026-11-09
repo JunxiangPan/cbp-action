@@ -35,7 +35,7 @@ creates a release (`attest-build-provenance` + artifact upload).
 
 - Local: **421 passed**, 43 warnings.
 - CI coverage: `security_core=91.64%/90.00%`, `cbp=90.56%/80.00%`.
-- `docs/1.2.0/E2E_MATRIX.md`: 5 repositories × 12 rules, read-only, plus the
+- `docs/1.2.0/E2E_MATRIX.md`: 5 repositories × 13 rules, read-only, plus the
   requested CBS `contract/v1.7.1` E2E (exit 3, three committed conflict
   markers in `.github/workflows/vm-proof.yml:15/16/18`).
 
@@ -59,7 +59,7 @@ rewritten to PASS. CBC R02–R19: 18/18 assertions (17 executed; R16 skipped on
 Windows); R01 NOT RUN (no upload). CBM B3 is field-level complete; **B2 is not
 claimed**. Evidence: `docs/1.2.0/evidence/`.
 
-## Twelve rules — fixtures, tests, exit codes
+## Thirteen rules — fixtures, tests, exit codes
 
 | ID | Rule | Severity | Fixtures (positive / negative / false-positive guard) | Exit |
 | --- | --- | --- | --- | --- |

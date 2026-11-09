@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from . import report_schema
+from .body_hash import canonical_body_hash
 
 BASE_MARKER = b"<!-- CBC-EVIDENCE-BEGIN -->"
 IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
@@ -196,7 +197,7 @@ def build_manifest(
     if not release_body.is_file():
         raise ManifestError(f"release body missing: {release_body}")
     body_data = release_body.read_bytes()
-    body_digest = sha256_bytes(base_body(body_data))
+    body_digest = canonical_body_hash(base_body(body_data))
     hashes = _artifact_hashes(list(artifacts), dict(artifact_sha256 or {}))
     evidence_hashes = []
     for item in evidence or []:
