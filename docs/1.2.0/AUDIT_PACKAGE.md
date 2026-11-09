@@ -10,11 +10,11 @@ GitHub Release. Merging the draft PR, tagging, and publishing are owner actions.
 | Branch | `1.2.0-dev` |
 | RC commit | `855fed7` (external-package manifest generator) |
 | Draft PR | https://github.com/JunxiangPan/cbp-action/pull/1 |
-| PR CI | run `42589469342` — success (4 matrix cells, dogfood, sarif, checks) |
-| Action E2E | run `42589469408` — success (15/15 payload + consumer parity) |
-| RC build + attest | run `42589460728` — success |
-| wheel | `cbp_action-1.2.0-py3-none-any.whl`<br>`589ab147dcd35c79dcfb2f3db432a2b64d283b10588e865e0977c0d4debf6840` |
-| sdist | `cbp_action-1.2.0.tar.gz`<br>`4415f229b0ba34e5617e17fe7c658bd61edb46d849dec236cb437c2d77acd400` |
+| PR CI | run `42589469342` (candidate) + run `42589933628` (docs HEAD) — success |
+| Action E2E | run `42589469408` (candidate) + run `42589933541` (docs HEAD) — success |
+| RC build + attest | run `42589460728` attempt 2 — success (final rebuild) |
+| wheel | `cbp_action-1.2.0-py3-none-any.whl`<br>`9469a8e980a536e9481e0b14239cd4857a5cd6173a61043d47645b82cf3b4d51` |
+| sdist | `cbp_action-1.2.0.tar.gz`<br>`98b8916ce26d84b38e492182eda8eba75d0ec8bb03c5ffb6d9001a0c2d7b405b` |
 | Attestation | `gh attestation verify` exit 0 for both; subject digest equals the local hash; repository `JunxiangPan/cbp-action` |
 | PyPI | `https://pypi.org/pypi/cbp-action/1.2.0/json` → **404** |
 | GitHub Release | `v1.2.0` → **not found** |
