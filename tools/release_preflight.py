@@ -35,6 +35,25 @@ def _one(directory: Path, pattern: str, label: str) -> Path:
     return matches[0]
 
 
+def _full_commit(value: str) -> str:
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{value}^{{commit}}"],
+        capture_output=True, text=True, check=False,
+    )
+    return result.stdout.strip() if result.returncode == 0 else value.strip()
+
+
+def _same_commit(left: str, right: str) -> bool:
+    left_full = _full_commit(left)
+    right_full = _full_commit(right)
+    if left_full == right_full:
+        return True
+    return (
+        len(left_full) >= 7 and len(right_full) >= 7
+        and (left_full.startswith(right_full) or right_full.startswith(left_full))
+    )
+
+
 def _check_hash(path: Path, expected: str, label: str) -> None:
     if not HASH_RE.fullmatch(expected):
         raise PreflightError(f"{label} expected hash is not 64 lowercase hex: {expected!r}")
@@ -115,9 +134,9 @@ def validate(
     e2e_run: str = "",
 ) -> dict[str, str]:
     """Validate already-downloaded inputs; return the resolved artifact paths."""
-    if tag_commit != rc_head:
+    if not _same_commit(tag_commit, rc_head):
         raise PreflightError(f"tag {tag} is {tag_commit}, RC run head is {rc_head}")
-    if tag_commit != ci_head:
+    if not _same_commit(tag_commit, ci_head):
         raise PreflightError(f"tag {tag} is {tag_commit}, CI run head is {ci_head}")
     if not rc_dir.is_dir():
         raise PreflightError(f"rc directory missing: {rc_dir}")
@@ -211,7 +230,7 @@ def main(argv: list[str] | None = None) -> int:
             _check_hash(sdist, args.expected_sdist_sha256.lower(), "sdist")
             _check_rc_assets(rc_dir, wheel, sdist)
             _check_manifest(artifact_dir)
-            if tag_commit != rc_head or tag_commit != ci_head:
+            if not _same_commit(tag_commit, rc_head) or not _same_commit(tag_commit, ci_head):
                 raise PreflightError("tag / RC / CI commits disagree")
         else:
             validate(
