@@ -128,11 +128,13 @@ def _git(root: Path, *args: str) -> tuple[int, str]:
     try:
         completed = subprocess.run(
             ["git", "-C", str(root), *args],
-            capture_output=True, text=True, timeout=30, check=False,
+            capture_output=True, encoding="utf-8", errors="replace", timeout=30, check=False,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return 1, f"git unavailable: {exc}"
-    return completed.returncode, completed.stdout
+    # A failed decode used to leave stdout=None on Windows (locale codec);
+    # the unit separator output can contain non-UTF-8 file names.
+    return completed.returncode, completed.stdout or ""
 
 
 def _test_roots(root: Path) -> list[Path]:
@@ -286,20 +288,67 @@ def rule_sign_001(ctx: RuleContext) -> list[str]:
     return findings
 
 
+CONFLICT_START = "<<<<<<<"
+CONFLICT_END = ">>>>>>>"
+CONFLICT_BASE = "|||||||"
+CONFLICT_SEPARATOR = "======="
+
+
+def _tracked_files(root: Path) -> list[str] | None:
+    code, output = _git(root, "ls-files", "-z")
+    if code != 0:
+        return None
+    return [item for item in output.split("\0") if item]
+
+
+def _conflict_marker_findings(root: Path) -> list[str]:
+    """CBP-WT-001: tracked text files must not contain conflict markers."""
+    files = _tracked_files(root)
+    if files is None:
+        return [".: git unavailable: cannot scan tracked files for conflict markers"]
+    findings: list[str] = []
+    for relative in files:
+        path = root / relative
+        try:
+            if path.stat().st_size > 2_000_000:
+                continue
+            data = path.read_bytes()
+        except OSError:
+            continue
+        if b"\0" in data[:4096]:
+            continue
+        in_conflict = False
+        for number, line in enumerate(data.decode("utf-8", "replace").splitlines(), 1):
+            stripped = line.rstrip()
+            if stripped.startswith(CONFLICT_START):
+                in_conflict = True
+                findings.append(f"{relative}:{number}: conflict marker: {stripped[:60]}")
+            elif stripped.startswith(CONFLICT_END):
+                in_conflict = False
+                findings.append(f"{relative}:{number}: conflict marker: {stripped[:60]}")
+            elif stripped.startswith(CONFLICT_BASE):
+                findings.append(f"{relative}:{number}: conflict marker: {stripped[:60]}")
+            elif in_conflict and stripped == CONFLICT_SEPARATOR:
+                findings.append(f"{relative}:{number}: conflict marker: {stripped[:60]}")
+    return findings
+
+
 def rule_wt_001(ctx: RuleContext) -> list[str]:
-    """CBP-WT-001: running the rules must not change tracked files."""
+    """CBP-WT-001: no leftover conflict markers, no tracked changes after gates."""
+    findings = _conflict_marker_findings(ctx.root)
     code, current = _git(ctx.root, "status", "--porcelain", "--untracked-files=no")
     if code != 0:
-        return [f".: {current}"]
-    if current == ctx.initial_worktree:
-        return []
-    before = set(ctx.initial_worktree.splitlines())
-    findings = []
-    for line in current.splitlines():
-        if line not in before:
-            path = line[3:].strip() if len(line) > 3 else line
-            findings.append(f"{path}: tracked file changed while gates ran")
-    return findings or [".: tracked worktree changed while gates ran"]
+        findings.append(f".: {current}")
+        return findings
+    if current != ctx.initial_worktree:
+        before = set(ctx.initial_worktree.splitlines())
+        changed = []
+        for line in current.splitlines():
+            if line not in before:
+                path = line[3:].strip() if len(line) > 3 else line
+                changed.append(f"{path}: tracked file changed while gates ran")
+        findings.extend(changed or [".: tracked worktree changed while gates ran"])
+    return findings
 
 
 def _pe_has_signature(path: Path) -> bool:

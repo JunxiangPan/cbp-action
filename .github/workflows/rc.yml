@@ -6,6 +6,9 @@ name: cbp-rc
 on:
   push:
     branches: [1.2.0-dev]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
   workflow_dispatch:
     inputs:
       ref:

@@ -58,7 +58,7 @@ Severity: **B** = blocking (1.2.0), **W** = warning + baseline (1.2.0), blocking
 | CBP-QA-001 | `QA_COUNTS_CONSISTENT` | B | declared counts ≠ row statuses; `Covered: 0` contradicts coverage disclosure | `qa_consistent` / `qa_count_mismatch` / `qa_covered_zero_with_coverage` | implemented |
 | CBP-DEBT-001 | `DEBT_EVIDENCE` | B | FIXED / NOT_FIXED entry has no file or number | `debt_with_evidence` / `debt_without_evidence` / `debt_word_in_prose` | implemented |
 | CBP-SIGN-001 | `SIGN_TOOLS_IN_TAG` | B | sign workflow references a script absent from the tag tree | `sign_tools_present` / `sign_tool_missing` / `script_in_comment` | implemented |
-| CBP-WT-001 | `WORKTREE_CLEAN_AFTER_GATES` | B | tracked files changed by a gate run | `wt_clean` / `wt_dirty` / `untracked_only` | implemented |
+| CBP-WT-001 | `WORKTREE_CLEAN_AFTER_GATES` | B | tracked files changed by a gate run, or a tracked file contains a conflict marker (`<<<<<<<`, `>>>>>>>`, `|||||||`, or `=======` inside a conflict) | `wt_clean` / `wt_dirty` / `untracked_only`; `wt_conflict_marker` / `wt_end_marker` / `wt_separator_only` / `wt_untracked_marker` | implemented |
 | CBP-BIN-001 | `BINARY_AUTHENTICODE` | W | installer exe unsigned and no waiver | `exe_signed` / `exe_unsigned` / `no_exe` | implemented |
 | CBP-DOC-001 | `DOC_REFERENCES_EXIST` | W | doc references a missing test/file path | `doc_refs_ok` / `doc_ref_missing` / `example_path` | implemented |
 | CBP-CLAIM-001 | `CAPABILITY_CLAIMS` | W | enforce/isolation claim without implementation or `audit-only` marker | `claim_backed` / `claim_unbacked` / `quoted_claim` | implemented |
@@ -110,3 +110,16 @@ cbc-event 0.1.x
 - Events emitted: `cbp.run.start`, one `cbp.gate.result` per gate, `cbp.run.end`.
 - `--cbc-event-max N` caps the run; dropped events are counted and printed as `CBC_EVENT ... dropped=N` (never silent).
 - `--cbc-event-hmac-env NAME` reads an HMAC-SHA256 key from the environment and writes `hmac_sha256` on every event. No token is written to the log.
+
+## CBP-WT-001 conflict-marker extension (post-RC request)
+
+Tracked files are read through `git ls-files -z`; binary files and files larger
+than 2 MB are skipped. A committed start/end/base marker fails the rule even when
+the worktree is clean. A bare `=======` (for example an RST heading underline) is
+only treated as a conflict separator when it appears between a start and an end
+marker. Untracked files are ignored.
+
+The scan exposed a Windows decoding defect: `text=True` decodes with the locale
+codec (GBK), and `git ls-files -z` can contain non-UTF-8 bytes, which left
+`stdout` as `None`. `_git` now decodes explicitly as UTF-8 with replacement and
+always returns a string.

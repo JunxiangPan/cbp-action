@@ -329,6 +329,43 @@ def test_worktree_rule_passes_on_a_clean_tree(tmp_path: Path) -> None:
     assert v12.rule_wt_001(ctx) == []
 
 
+def test_worktree_rule_fails_on_a_committed_conflict_marker(tmp_path: Path) -> None:
+    _write(tmp_path, "a.py", "<<<<<<< HEAD\nprint(1)\n=======\nprint(2)\n>>>>>>> feature\n")
+    _git_repo(tmp_path)
+    code, status = v12._git(tmp_path, "status", "--porcelain", "--untracked-files=no")
+    ctx = v12.RuleContext(root=tmp_path, initial_worktree=status)
+    findings = v12.rule_wt_001(ctx)
+    assert findings
+    assert any("conflict marker" in item for item in findings)
+    assert any("a.py:1" in item for item in findings)
+
+
+def test_worktree_rule_flags_an_end_marker_without_a_start(tmp_path: Path) -> None:
+    _write(tmp_path, "a.py", ">>>>>>> feature\n")
+    _git_repo(tmp_path)
+    code, status = v12._git(tmp_path, "status", "--porcelain", "--untracked-files=no")
+    ctx = v12.RuleContext(root=tmp_path, initial_worktree=status)
+    findings = v12.rule_wt_001(ctx)
+    assert any("a.py:1" in item and "conflict marker" in item for item in findings)
+
+
+def test_worktree_rule_accepts_a_separator_without_a_conflict(tmp_path: Path) -> None:
+    _write(tmp_path, "doc.rst", "Title\n=======\n\nBody\n")
+    _git_repo(tmp_path)
+    code, status = v12._git(tmp_path, "status", "--porcelain", "--untracked-files=no")
+    ctx = v12.RuleContext(root=tmp_path, initial_worktree=status)
+    assert v12.rule_wt_001(ctx) == []
+
+
+def test_worktree_rule_ignores_untracked_conflict_markers(tmp_path: Path) -> None:
+    _write(tmp_path, "a.txt", "clean\n")
+    _git_repo(tmp_path)
+    _write(tmp_path, "untracked.txt", "<<<<<<< HEAD\n")
+    code, status = v12._git(tmp_path, "status", "--porcelain", "--untracked-files=no")
+    ctx = v12.RuleContext(root=tmp_path, initial_worktree=status)
+    assert v12.rule_wt_001(ctx) == []
+
+
 def test_cli_v12_exit_codes_and_report(tmp_path: Path) -> None:
     _write(tmp_path, "tests/test_a.py", "def test_a(): pass\n")
     _write(tmp_path, ".github/workflows/ci.yml", "jobs:\n  t:\n    steps:\n      - run: |\n          pytest -q tests\n")

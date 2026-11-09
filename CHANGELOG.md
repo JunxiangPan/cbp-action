@@ -18,7 +18,7 @@ Release candidate only: no PyPI upload and no GitHub Release until human audit.
 - Twelve detection rules with `--v12`:
   - blocking: CBP-CI-001 test roots, CBP-VER-001 version sync, CBP-QA-001 QA
     counts, CBP-DEBT-001 debt evidence, CBP-SIGN-001 sign tools, CBP-WT-001
-    worktree cleanliness;
+    worktree cleanliness **and conflict markers in tracked files**;
   - warning + baseline: CBP-BIN-001 Authenticode, CBP-DOC-001 doc references,
     CBP-CLAIM-001 capability claims, CBP-COV-001 coverage hard gate,
     CBP-PROOF-001 proof tier, CBP-SLOP-001 docstring templates.

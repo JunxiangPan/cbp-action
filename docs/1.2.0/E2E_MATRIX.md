@@ -102,9 +102,47 @@ None. The only blocking failure is genuine, and every warning is a true
 positive after the implementation fixes above. A waiver would have hidden a real
 finding, so no waiver file is shipped with the 1.2.0 RC.
 
+## Requested E2E: CBS `contract/v1.7.1` (expected FAIL)
+
+Ref: `contract/v1.7.1` @ `5d0b100b963c04046992bc13e4ae206d48fc92e2`
+(2026-11-09 08:10 +0800). The branch was cloned into a temporary directory;
+the CBS working repository was not modified.
+
+```bash
+git clone --branch contract/v1.7.1 /path/to/public-release .tmp-cbs-171
+python -m cbp.cli --root "<native path>/.tmp-cbs-171" --v12
+```
+
+Result: **exit 3 — the expected FAIL.**
+
+| Rule | Status | Findings |
+| --- | --- | --- |
+| CBP-WT-001 | **FAIL** | 3 |
+| CBP-BIN-001 | WARN | 1 |
+| CBP-DOC-001 | WARN | 32 |
+| other 9 rules | PASS | — |
+
+The blocking findings are committed conflict markers in a tracked file:
+
+```text
+.github/workflows/vm-proof.yml:15: conflict marker: <<<<<<< HEAD
+.github/workflows/vm-proof.yml:16: conflict marker: =======
+.github/workflows/vm-proof.yml:18: conflict marker: >>>>>>> 1493d86d082061762c1b49111b51285ad99811c1
+```
+
+This is a real defect in the contract branch, not a rule false positive. The
+RST-separator fixture (`wt_separator_only`) confirms that a bare `=======` alone
+does not fail. The fix belongs to CBS: resolve the conflict in `vm-proof.yml`
+and commit the resolved file.
+
+This E2E also found and fixed a Windows decoding bug: `git ls-files -z` can
+contain non-UTF-8 bytes, and `text=True` decoded with GBK, leaving `stdout` as
+`None`. `_git` now decodes UTF-8 with replacement and always returns a string.
+
 ## Reproduction
 
 ```bash
 python -m cbp.cli --root "D:\path\to\repo" --v12 --v12-report report.json
 python -m cbp.cli --root "D:\path\to\repo" --v12 --v12-only CBP-CI-001
+python -m cbp.cli --root "D:\path\to\repo" --v12 --v12-only CBP-WT-001
 ```
