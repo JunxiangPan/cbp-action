@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import json
 import os
+import platform
 import sys
 from pathlib import Path
 
-from . import baseline, binary_gate, suppression, claims_gate, comment_gate, coverage_gate, custom_rules, dependency_gate, docs_gate, encoding_gate, errata, report_parser, report_schema, sarif, upgrade_gate, verify_release
+from . import baseline, binary_gate, suppression, cbc_event, claims_gate, comment_gate, coverage_gate, custom_rules, dependency_gate, docs_gate, encoding_gate, errata, report_parser, report_schema, sarif, upgrade_gate, verify_release
 from .config import SCHEMA_VERSION, load_config
 
 
@@ -182,11 +184,31 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
     parser.add_argument("--test-path", default="")
     parser.add_argument("--jobs", type=int, default=1)
     parser.add_argument("--github-annotations", action="store_true")
+    parser.add_argument("--artifact-repository", default="")
+    parser.add_argument("--body-hash-scope", default="")
+    parser.add_argument("--require-body-scope", action="store_true")
+    parser.add_argument("--expected-repository", default="")
+    parser.add_argument("--cbc-event-dir", default="")
+    parser.add_argument("--cbc-event-max", type=int, default=1000)
+    parser.add_argument("--cbc-event-hmac-env", default="")
     args = parser.parse_args(argv)
+    if args.body_hash_scope and args.body_hash_scope not in report_schema.BODY_HASH_SCOPES:
+        print(json.dumps({
+            "gate_status": "FAIL",
+            "exit_code": report_schema.EXIT_INPUT,
+            "error": "unsupported body_hash_scope "
+            + repr(args.body_hash_scope)
+            + "; supported: "
+            + ", ".join(report_schema.BODY_HASH_SCOPES),
+        }, ensure_ascii=False))
+        return report_schema.EXIT_INPUT
     if args.parse_report:
         try:
             parsed = report_parser.parse_report(
-                Path(args.parse_report), observed_exit_code=args.observed_exit_code
+                Path(args.parse_report),
+                observed_exit_code=args.observed_exit_code,
+                require_body_scope=args.require_body_scope,
+                expected_repository=args.expected_repository,
             )
         except report_parser.ReportError as exc:
             print(json.dumps(
@@ -285,6 +307,41 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
             return report_schema.EXIT_INPUT
         cfg.custom_rules = tuple(getattr(cfg, "custom_rules", ()) or ()) + tuple(pack["rules"])
         cfg.enable_custom = True
+    artifact_repository = args.artifact_repository or os.environ.get("GITHUB_REPOSITORY", "")
+    cbc_config = getattr(cfg, "cbc_event", {}) or {}
+    if not isinstance(cbc_config, dict):
+        print(json.dumps({"gate_status": "FAIL", "exit_code": report_schema.EXIT_INPUT, "error": "cbc_event must be an object"}, ensure_ascii=False))
+        return report_schema.EXIT_INPUT
+    event_dir = (
+        args.cbc_event_dir
+        or str(cbc_config.get("dir", "") or "")
+        or os.environ.get("CBP_CBC_EVENT_DIR", "")
+    )
+    event_enabled = bool(event_dir) and bool(
+        args.cbc_event_dir
+        or cbc_config.get("enabled", False)
+        or os.environ.get("CBP_CBC_EVENT_DIR")
+    )
+    event_max = args.cbc_event_max if args.cbc_event_max != 1000 else int(cbc_config.get("max_events", 1000))
+    hmac_env = args.cbc_event_hmac_env or str(cbc_config.get("hmac_key_env", "") or "")
+    hmac_key = os.environ.get(hmac_env, "") if hmac_env else ""
+    try:
+        cbp_version = importlib.metadata.version("cbp-action")
+    except importlib.metadata.PackageNotFoundError:
+        cbp_version = str(getattr(cfg, "release_version", "") or "0")
+    emitter = cbc_event.EventEmitter(
+        event_dir,
+        source={"kind": "tool", "name": "cbp", "version": cbp_version, "instance": platform.node() or "cbp"},
+        enabled=event_enabled,
+        max_events=event_max,
+        hmac_key=hmac_key,
+    )
+    emitter.emit("INFO", "cbp.run.start", {
+        "root": str(Path(args.root).resolve()),
+        "package_type": str(getattr(cfg, "package_type", "") or ""),
+        "mode": args.mode,
+        "body_hash_scope": args.body_hash_scope or "base",
+    })
     runners = {
         "encoding": encoding_gate.run,
         "coverage": coverage_gate.run,
@@ -379,6 +436,7 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
             entries.append({"name": name, "status": "SKIPPED", "reason": reason})
             gate_results.append((name, True, "SKIPPED (" + reason + ")"))
             print(f"{name}: SKIPPED ({reason})")
+            emitter.emit("WARN", "cbp.gate.result", {"gate": name, "status": "SKIPPED", "reason": reason})
             continue
         executed += 1
         status, passed, detail = outcome_by_name[name]
@@ -387,11 +445,13 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
             entries.append({"name": name, "status": "SKIPPED", "reason": detail})
             gate_results.append((name, True, "SKIPPED_INFRA " + detail))
             print(f"{name}: SKIPPED_INFRA {detail}")
+            emitter.emit("CRITICAL", "cbp.gate.result", {"gate": name, "status": "SKIPPED_INFRA", "reason": detail})
             continue
         if status == "FAIL":
             entries.append({"name": name, "status": "FAIL", "reason": (detail.splitlines() or [""])[0][:500]})
             gate_results.append((name, False, detail))
             print(f"{name}: FAIL {detail}")
+            emitter.emit("CRITICAL", "cbp.gate.result", {"gate": name, "status": "FAIL", "reason": detail[:500]})
             if args.github_annotations:
                 for line in detail.splitlines():
                     match = __import__("re").match(r"^(?P<path>[^:]+):(?P<line>\d+):\s*(?P<message>.+)$", line)
@@ -401,6 +461,7 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
         entries.append({"name": name, "status": "PASS", "reason": ""})
         gate_results.append((name, True, detail))
         print(f"{name}: PASS {detail}")
+        emitter.emit("INFO", "cbp.gate.result", {"gate": name, "status": "PASS", "reason": ""})
     baseline_path = Path(args.generate_baseline) if args.generate_baseline else Path(args.baseline) if args.baseline else Path(args.root) / "cbp-baseline.json"
     if args.generate_baseline:
         entries_to_write = []
@@ -458,6 +519,20 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
         f"CBP_APPLICABLE={applicable} CBP_SKIP_RATIO={skip_ratio:.6f} "
         f"CBP_BLOCKING_SKIP={'true' if blocking_skip else 'false'}"
     )
+    emitter.emit(
+        "CRITICAL" if exit_code in (report_schema.EXIT_GATE, report_schema.EXIT_SKIP) else "INFO",
+        "cbp.run.end",
+        {
+            "gate_status": gate_status,
+            "exit_code": exit_code,
+            "applicable_gate_count": applicable,
+            "skip_count": skip_count,
+            "skip_ratio": skip_ratio,
+            "blocking_skip": blocking_skip,
+        },
+    )
+    if emitter.enabled:
+        print(f"CBC_EVENT emitted={emitter.emitted} dropped={emitter.dropped} dir={emitter.event_dir}")
     if args.report_json:
         report = {
             "schema_version": report_schema.MANIFEST_SCHEMA_VERSION,
@@ -470,8 +545,12 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
             "skip_count": skip_count,
             "skip_ratio": skip_ratio,
             "blocking_skip": blocking_skip,
+            "body_hash_scope": args.body_hash_scope or "base",
+            "package_type": package_type,
             "gates": entries,
         }
+        if artifact_repository:
+            report["artifact_repository"] = artifact_repository
         try:
             report_parser.parse_report_data(report, source="--report-json")
         except report_parser.ReportError as exc:

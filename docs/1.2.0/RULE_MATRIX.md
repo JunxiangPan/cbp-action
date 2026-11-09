@@ -80,10 +80,33 @@ Every rule ships: positive fixture, negative fixture, false-positive guard fixtu
 
 ## Delivery checklist
 
-- [ ] Step 0: baseline, branch, this file
-- [ ] Step 1: `body_hash_scope`, `artifact_repository`, cbc-event emitter
+- [x] Step 0: baseline, branch, this file
+- [x] Step 1: `body_hash_scope`, `artifact_repository`, cbc-event emitter
 - [ ] Step 2: rules 1–6 with fixtures and tests
 - [ ] Step 3: rules 7–12 with warning baseline and expiry
 - [ ] Step 4: read-only E2E matrix across CBS/CBE/CBM/CBC + consumer parity
 - [ ] Step 5: 1.2.0 RC wheel/sdist, CHANGELOG/README/UPGRADING, no publish
 - [ ] Step 6: audit package, stop for human audit
+
+## Step 1 implementation notes
+
+`body_hash_scope`
+
+- `tools/dogfood_manifest.py` writes `body_hash_scope: "base"`; only `base` is accepted by `report_schema.BODY_HASH_SCOPES`.
+- `--body-hash-scope full` (or any other value) is an input error: exit 2.
+- `--parse-report --require-body-scope` rejects a manifest that omits the field (exit 2). Without the flag, a 1.1.0-era manifest without the field still parses.
+- `release_body_hash` covers the generated body only; the base scope means "the body as generated", not later ERRATA addenda.
+
+`artifact_repository`
+
+- Recorded in the manifest from `--artifact-repository`, `artifact_repository` in `cbp.json`, or `GITHUB_REPOSITORY`.
+- Empty values are omitted from the manifest (not written as an empty string).
+- `--parse-report --expected-repository owner/repo` rejects a manifest whose `artifact_repository` differs: exit 2, `cross-repository artifact`.
+
+cbc-event 0.1.x
+
+- Disabled by default. Enable with `--cbc-event-dir PATH` (or `cbc_event.enabled` + `dir` in `cbp.json`, or `CBP_CBC_EVENT_DIR`).
+- Writes `events.jsonl` + `head.json`; genesis `sha256:`+64 zeroes; `event_hash = sha256(prev_hash + "\n" + canonical_json(event without event_hash))`.
+- Events emitted: `cbp.run.start`, one `cbp.gate.result` per gate, `cbp.run.end`.
+- `--cbc-event-max N` caps the run; dropped events are counted and printed as `CBC_EVENT ... dropped=N` (never silent).
+- `--cbc-event-hmac-env NAME` reads an HMAC-SHA256 key from the environment and writes `hmac_sha256` on every event. No token is written to the log.
