@@ -13,7 +13,7 @@ quality-manifest.
 | --- | --- |
 | Candidate commit | `163f138` |
 | RC run | https://github.com/JunxiangPan/cbp-action/actions/runs/42603720434 |
-| CI run (manifest) | https://github.com/JunxiangPan/cbp-action/actions/runs/42603730509 |
+| CI run (manifest) | https://github.com/JunxiangPan/cbp-action/actions/runs/42604400520 |
 | e2e run | https://github.com/JunxiangPan/cbp-action/actions/runs/42603730815 |
 | Artifact | `cbp-rc` |
 | wheel | `cbp_action-1.2.0-py3-none-any.whl` — `bdddc74f828de7ae1beae3b484ece5ddb2986620585985b0f24c9b6897701e16` |
@@ -31,7 +31,7 @@ abbreviated SHA and compares it with the RC/CI heads.
 ```bash
 python tools/release_preflight.py \
   --rc-run-id 42603720434 \
-  --ci-run-id 42603730509 \
+  --ci-run-id 42604400520 \
   --tag v1.2.0 \
   --tag-commit 163f138 \
   --expected-wheel-sha256 bdddc74f828de7ae1beae3b484ece5ddb2986620585985b0f24c9b6897701e16 \
@@ -43,7 +43,7 @@ python tools/release_preflight.py \
 Actual output on 2026-11-09:
 
 ```text
-PREFLIGHT_OK tag=v1.2.0 ci_run=42603730509 rc_run=42603720434 commit=163f138 wheel=bdddc74f828de7ae1beae3b484ece5ddb2986620585985b0f24c9b6897701e16 sdist=3cee5cd8309533d3b809cdadeea7dd73cf2fc32dda268f9b912c0dfe751335b1
+PREFLIGHT_OK tag=v1.2.0 ci_run=42604400520 rc_run=42603720434 commit=163f138 wheel=bdddc74f828de7ae1beae3b484ece5ddb2986620585985b0f24c9b6897701e16 sdist=3cee5cd8309533d3b809cdadeea7dd73cf2fc32dda268f9b912c0dfe751335b1
 ```
 
 Raw copy: `docs/1.2.0/evidence/preflight.txt` (exit code 0).
@@ -54,7 +54,7 @@ Failure handling:
   create a tag just to make preflight pass.
 - hash mismatch: stop. Do not edit the expected hash to make it pass.
 - RC/CI commit mismatch: stop. Do not tag.
-- quality-manifest missing: stop and inspect CI run `42603730509`.
+- quality-manifest missing: stop and inspect CI run `42604400520`.
 
 ## HUMAN ONLY — release commands (not executed)
 
@@ -75,7 +75,7 @@ gh workflow run release.yml \
   --repo JunxiangPan/cbp-action \
   --ref v1.2.0 \
   -f rc_run_id=42603720434 \
-  -f ci_run_id=42603730509 \
+  -f ci_run_id=42604400520 \
   -f release_tag=v1.2.0 \
   -f e2e_run_id=42603730815 \
   -f expected_wheel_sha256=bdddc74f828de7ae1beae3b484ece5ddb2986620585985b0f24c9b6897701e16 \

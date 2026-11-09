@@ -11,6 +11,7 @@ GitHub Release. Merging the draft PR, tagging, and publishing are owner actions.
 | RC commit | `163f138` (remints the CI manifest from RC hashes) |
 | Draft PR | https://github.com/JunxiangPan/cbp-action/pull/1 |
 | PR CI | run `42603730509` — success |
+| Release CI (manifest) | run `42604400520` — success |
 | Action E2E | run `42603730815` — success (15/15 payload + consumer parity) |
 | RC build + attest | run `42603720434` — success |
 | wheel | `cbp_action-1.2.0-py3-none-any.whl`<br>`bdddc74f828de7ae1beae3b484ece5ddb2986620585985b0f24c9b6897701e16` |
@@ -137,7 +138,7 @@ manifest (RC `artifact_hashes`, recomputed `evidence_sha256`, preserved gate /
 body / commit fields), re-verifies it, and asserts `--check-only` before
 publishing. Preflight performs the same remint.
 
-Preflight (read-only): `PREFLIGHT_OK tag=v1.2.0 ci_run=42603730509
+Preflight (read-only): `PREFLIGHT_OK tag=v1.2.0 ci_run=42604400520
 rc_run=42603720434 commit=163f138` — raw output in
 `docs/1.2.0/evidence/preflight.txt`.
 

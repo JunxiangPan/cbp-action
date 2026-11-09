@@ -23,7 +23,8 @@ Status: **PASS for re-audit, no publish**. Code candidate `163f138`, branch
 - Coverage: `python -m coverage run --branch --source=src/cbp,tools -m pytest -q tests`
   then `python -m coverage json` → `security_core=91.64%/90.00%`,
   `cbp=90.56%/80.00%`.
-- CI run `42603730509`: all jobs success. E2E `42603730815`: success
+- PR CI run `42603730509`: all jobs success. Release CI run `42604400520`
+  (push main at `163f138`): success. E2E `42603730815`: success
   (15/15 payload + consumer parity).
 
 ## [3] Build artifacts / attestation — PASS
@@ -108,7 +109,7 @@ since the CBC/CBM validation; the release-path fix does not touch it.
 - Actual read-only preflight on 2026-11-09 (exit 0):
 
 ```text
-PREFLIGHT_OK tag=v1.2.0 ci_run=42603730509 rc_run=42603720434 commit=163f138 wheel=bdddc74f828de7ae1beae3b484ece5ddb2986620585985b0f24c9b6897701e16 sdist=3cee5cd8309533d3b809cdadeea7dd73cf2fc32dda268f9b912c0dfe751335b1
+PREFLIGHT_OK tag=v1.2.0 ci_run=42604400520 rc_run=42603720434 commit=163f138 wheel=bdddc74f828de7ae1beae3b484ece5ddb2986620585985b0f24c9b6897701e16 sdist=3cee5cd8309533d3b809cdadeea7dd73cf2fc32dda268f9b912c0dfe751335b1
 ```
 
 Raw: `docs/1.2.0/evidence/preflight.txt`.
