@@ -5,76 +5,110 @@ PyPI upload, no GitHub Release, and no PR merge has been performed.
 
 ## Authoritative RC artifact
 
-Only the artifact produced by the audit RC run may be released.
+Only the `cbp-rc` bundle from the audit RC run may be released. The CI
+`cbp-dist` bundle is **not** a release input; it is used only for the
+quality-manifest.
 
 | Item | Value |
 | --- | --- |
-| Code candidate | `72252b4` |
-| RC workflow run | https://github.com/JunxiangPan/cbp-action/actions/runs/42596772450 |
-| Artifact name | `cbp-rc` |
-| wheel | `cbp_action-1.2.0-py3-none-any.whl` — `ee365cdde99c6ec453703fbf7dfb74617da9b65fff28b4350e8eebad93c7b6fb` |
-| sdist | `cbp_action-1.2.0.tar.gz` — `870b52860f8b1a9b6a71300455229084fa0d83456255a1742038804abee16b26` |
-| `RC_ASSETS.sha256` | `89e22fc9c91cb63094862e5409e825ec8254839892c84f819b75b09ea95d6dbe` |
+| Candidate commit | `d3ec73e` |
+| RC run | https://github.com/JunxiangPan/cbp-action/actions/runs/42599351558 |
+| CI run (manifest) | https://github.com/JunxiangPan/cbp-action/actions/runs/42599359187 |
+| e2e run | https://github.com/JunxiangPan/cbp-action/actions/runs/42599359071 |
+| Artifact | `cbp-rc` |
+| wheel | `cbp_action-1.2.0-py3-none-any.whl` — `dafc9662eba03d2e2002f91a14708aa0384eeaf1d45926f72f8104c9196407d6` |
+| sdist | `cbp_action-1.2.0.tar.gz` — `e58524e7edee996d1e41f3281f0ff6e4be0fea0d078c862b0aa5861b21059418` |
+| `RC_ASSETS.sha256` | `8a28b2873d5b2d462929d57c909fdac57567d14b1d7b6835706178e1707d9358` |
 
-Verify before any upload:
+The tag, RC run head and CI run head must all be candidate `d3ec73e`. Any
+mismatch is exit 3 and no Release is created.
+
+## Preflight (no Release, no PyPI)
 
 ```bash
-gh run download 42596772450 --repo JunxiangPan/cbp-action -n cbp-rc -D rc
-sha256sum rc/cbp_action-1.2.0-py3-none-any.whl rc/cbp_action-1.2.0.tar.gz
-gh attestation verify rc/cbp_action-1.2.0-py3-none-any.whl --repo JunxiangPan/cbp-action
-gh attestation verify rc/cbp_action-1.2.0.tar.gz --repo JunxiangPan/cbp-action
+python tools/release_preflight.py \
+  --rc-run-id 42599351558 \
+  --ci-run-id 42599359187 \
+  --tag v1.2.0 \
+  --expected-wheel-sha256 dafc9662eba03d2e2002f91a14708aa0384eeaf1d45926f72f8104c9196407d6 \
+  --expected-sdist-sha256 e58524e7edee996d1e41f3281f0ff6e4be0fea0d078c862b0aa5861b21059418 \
+  --e2e-run-id 42599359071 \
+  --repository JunxiangPan/cbp-action
 ```
 
-## Local `dist/` is not the audit artifact
+It downloads `cbp-rc` and `quality-manifest-42599359187`, checks both hashes,
+`RC_ASSETS.sha256`, the manifest hash, the release body generation, and
+tag/RC/CI commit equality. It prints `PREFLIGHT_OK` or exits 3.
 
-The local working-tree build is **not** release evidence:
+## Release path (Fast-forward, recommended)
+
+The tag must point at the same commit as the RC and CI runs. The RC run is for
+`d3ec73e`; do not tag a merge commit that has no RC run.
+
+```bash
+git checkout main
+git merge --ff-only 1.2.0-dev
+git push origin main
+git tag -a v1.2.0 d3ec73e -m "CBP v1.2.0"
+git push origin v1.2.0
+```
+
+Then dispatch `release.yml` with:
 
 ```text
-dist/cbp_action-1.2.0-py3-none-any.whl  3fdd809ac0eb6b53ccfffd5029febfc29a27e5b8ca2f9108951b4aeaec26cf9b
-dist/cbp_action-1.2.0.tar.gz            c866d9a5d74aaf15b783aee61ea6c074370b8faf6e5987c313344b3f20534b88
+rc_run_id              42599351558
+ci_run_id              42599359187
+release_tag            v1.2.0
+e2e_run_id             42599359071
+expected_wheel_sha256  dafc9662eba03d2e2002f91a14708aa0384eeaf1d45926f72f8104c9196407d6
+expected_sdist_sha256  e58524e7edee996d1e41f3281f0ff6e4be0fea0d078c862b0aa5861b21059418
 ```
 
-Do not upload, tag, or attest these files. A local build is not reproducible
-against the RC run and has no attestation.
+`release.yml` downloads `cbp-rc`, verifies both hashes and `RC_ASSETS.sha256`,
+requires `tag == RC head == CI head`, verifies the RC attestations, generates
+the body from the RC wheel, and creates the Release from `rc/*`. Any mismatch
+exits 3 before `gh release create`. PyPI publishes the Release assets.
 
-## Superseded artifacts
+### Merge-commit alternative (not recommended)
 
-Do not release any of these:
+If a GitHub merge commit is used, its SHA differs from `d3ec73e`. The RC run
+`42599351558` can no longer be used. You must run CI and RC again on the merge
+commit, re-attest, re-run preflight, and have the result re-audited. Do not tag a
+merge commit and reuse an older RC run.
+
+## Forbidden artifacts
+
+Do not upload, tag, or attest these:
+
+```text
+local dist wheel  3fdd809ac0eb6b53ccfffd5029febfc29a27e5b8ca2f9108951b4aeaec26cf9b
+local dist sdist  c866d9a5d74aaf15b783aee61ea6c074370b8faf6e5987c313344b3f20534b88
+```
+
+### Superseded RC artifacts
 
 | Wheel | Sdist | Status |
 | --- | --- | --- |
-| `9469a8e9…` | `98b8916c…` | superseded by `72252b4` provenance fix |
+| `ee365cdd…` | `870b5286…` | superseded by the release-path fix |
+| `9469a8e9…` | `98b8916c…` | superseded |
 | `589ab147…` | `4415f229…` | superseded |
-| `40b0f5f8…` | `e30fa831…` | early RC, superseded |
-| `06f8c3d3…` | `49592d6b…` | superseded |
-
-## If a rebuild is required
-
-1. Make the code change and push to `1.2.0-dev`.
-2. Wait for the `cbp-rc` push run; it builds wheel + sdist and attests both.
-3. Download the new `cbp-rc` artifact and verify both attestations.
-4. Update this runbook, `AUDIT_PACKAGE.md`, `SELF_AUDIT.md`, `E2E_MATRIX.md`.
-5. Mark the previous wheel/sdist **superseded** here; never overwrite a hash.
+| `40b0f5f8…` | `e30fa831…` | early RC |
+| `06f8c3d3…` | `49592d6b…` | early RC |
 
 ## Release steps (do not execute now)
 
-1. Human re-audit of `docs/1.2.0/SELF_AUDIT.md`, `AUDIT_PACKAGE.md`,
-   `RULE_MATRIX.md`, `E2E_MATRIX.md`, `EXTERNAL_MANIFEST.md` and the evidence
-   bundle.
-2. Human approval to release.
-3. Merge PR #1 with the reviewed commit. Do not rewrite the RC candidate.
-4. Create tag `v1.2.0` on the merge commit; the tag must not move.
-5. Upload the exact wheel/sdist above to PyPI through the approved publish
-   workflow; verify PyPI digests equal the release assets.
-6. Create the GitHub Release from the same tag; attach wheel, sdist,
-   `RELEASE_ASSETS.sha256`, `quality-manifest.json`, `quality-manifest.json.sha256`,
-   and release notes. Verify `gh attestation verify`.
-7. Consumer order: upgrade **CBM and CBC consumers first** (they need
-   `body_hash_scope: "base"`), then upgrade CBE/CBP producers, then the CBS
-   orchestrator. Do not let a producer emit 1.2.0 manifests before consumers can
-   parse the new fields.
-8. Post-release: verify `CONSUMER_VIEW_OK`, PyPI/Release digest equality,
-   `--require-gate-pass`, and the 12-rule report on the release commit.
+1. Human re-audit of `SELF_AUDIT.md`, `AUDIT_PACKAGE.md`, `RULE_MATRIX.md`,
+   `E2E_MATRIX.md`, `EXTERNAL_MANIFEST.md`, the evidence bundle, and this
+   runbook.
+2. Explicit human approval to release.
+3. Run the Fast-forward sequence above so the tag commit is `d3ec73e`.
+4. Run the preflight command; require `PREFLIGHT_OK`.
+5. Dispatch `release.yml` with the exact inputs above.
+6. Verify the Release assets equal `dafc9662…` / `e58524e7…`, PyPI digests match
+   the Release assets, and both `gh attestation verify` calls pass.
+7. Consumer order: upgrade CBM and CBC consumers first (they need
+   `body_hash_scope: "base"`), then CBE/CBP producers, then the CBS
+   orchestrator. Do not emit 1.2.0 manifests before consumers can parse them.
 
 ## Approval
 

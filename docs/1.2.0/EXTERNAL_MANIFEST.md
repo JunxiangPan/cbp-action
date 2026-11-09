@@ -140,4 +140,4 @@ manifest gates equal the gate report gates; base body excludes the CBC appendix;
 missing gate/artifact/body/evidence; missing or `full` scope; digest mismatch;
 stable hashes; `FAIL` stays `FAIL`; SKIPPED without a reason rejected; the gate
 report generator records target identity and two targets produce different
-bytes. Full suite: **406 passed**.
+bytes. Full suite: **414 passed**.

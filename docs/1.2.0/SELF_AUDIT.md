@@ -1,17 +1,17 @@
-# CBP 1.2.0 — self-audit (post-fix)
+# CBP 1.2.0 — self-audit (release-path fix)
 
-Status: **PASS for re-audit, no publish**. Code candidate `72252b4`, branch
-`1.2.0-dev`, PR #1 open. Each item below cites the command, file or hash used.
+Status: **PASS for re-audit, no publish**. Code candidate `d3ec73e`, branch
+`1.2.0-dev`, PR #1 open. Each item cites the command, file or hash used.
 
 ## [1] Candidate identity / repository state — PASS
 
 | Check | Evidence |
 | --- | --- |
-| Code candidate | `git rev-parse HEAD` → `72252b4db38b29bb773462e3b3c0520a4a3db7ef` |
+| Code candidate | `git rev-parse HEAD` → `d3ec73e` |
 | Branch | `1.2.0-dev` |
-| PR #1 | `gh pr view 1` → `state=OPEN`, head `72252b4` |
-| CI | run `42596785338` — success |
-| Action E2E | run `42596785416` — success |
+| PR #1 | `gh pr view 1` → `OPEN`, head `d3ec73e` |
+| CI | run `42599359187` — success |
+| Action E2E | run `42599359071` — success |
 | v1.2.0 tag | `git ls-remote --tags origin refs/tags/v1.2.0` → empty |
 | PyPI 1.2.0 | `https://pypi.org/pypi/cbp-action/1.2.0/json` → **404** |
 | GitHub Release | `gh release view v1.2.0` → not found |
@@ -19,87 +19,102 @@ Status: **PASS for re-audit, no publish**. Code candidate `72252b4`, branch
 
 ## [2] Tests / CI — PASS
 
-- `python -m pytest -q tests` → **406 passed**, 43 warnings.
+- `python -m pytest -q tests` → **414 passed**, 43 warnings.
 - Coverage: `python -m coverage run --branch --source=src/cbp,tools -m pytest -q tests`
   then `python -m coverage json` → `security_core=91.64%/90.00%`,
   `cbp=90.56%/80.00%`.
-- CI run `42596785338`: all jobs success (4 test-coverage cells, dogfood,
-  sarif, checks, quickstart, repo-hygiene). Action E2E `42596785416`: success
+- CI run `42599359187`: all jobs success. E2E `42599359071`: success
   (15/15 payload + consumer parity).
 
 ## [3] Build artifacts / attestation — PASS
 
 | Artifact | SHA256 |
 | --- | --- |
-| `cbp_action-1.2.0-py3-none-any.whl` | `ee365cdde99c6ec453703fbf7dfb74617da9b65fff28b4350e8eebad93c7b6fb` |
-| `cbp_action-1.2.0.tar.gz` | `870b52860f8b1a9b6a71300455229084fa0d83456255a1742038804abee16b26` |
-| `RC_ASSETS.sha256` | `89e22fc9c91cb63094862e5409e825ec8254839892c84f819b75b09ea95d6dbe` |
+| wheel | `dafc9662eba03d2e2002f91a14708aa0384eeaf1d45926f72f8104c9196407d6` |
+| sdist | `e58524e7edee996d1e41f3281f0ff6e4be0fea0d078c862b0aa5861b21059418` |
+| `RC_ASSETS.sha256` | `8a28b2873d5b2d462929d57c909fdac57567d14b1d7b6835706178e1707d9358` |
 
-- Source: RC run `42596772450`, artifact `cbp-rc`.
+- Source: RC run `42599351558`, artifact `cbp-rc`.
 - `gh attestation verify <wheel>` → exit 0; `gh attestation verify <sdist>` →
-  exit 0; subject digests equal the table above.
+  exit 0; subject digests equal the table.
 - Local `dist/` is **not** the audit artifact: wheel
   `3fdd809ac0eb6b53ccfffd5029febfc29a27e5b8ca2f9108951b4aeaec26cf9b`, sdist
-  `c866d9a5d74aaf15b783aee61ea6c074370b8faf6e5987c313344b3f20534b88`.
-  `RELEASE_RUNBOOK.md` forbids publishing these.
+  `c866d9a5d74aaf15b783aee61ea6c074370b8faf6e5987c313344b3f20534b88`. The
+  runbook forbids publishing them.
 
 ## [4] Twelve rules — PASS
 
-- `python -m cbp.cli --root . --v12` → 12 PASS, 0 FAIL, 0 WARN,
-  `blocking_failed=false`; report `docs/1.2.0/evidence/v12-cbp.json`.
+- `python -m cbp.cli --root . --v12` → 12 PASS, `blocking_failed=false`.
 - 6 blocking: CI-001, VER-001, QA-001, DEBT-001, SIGN-001, WT-001.
 - 6 warning: BIN-001, DOC-001, CLAIM-001, COV-001, PROOF-001, SLOP-001.
 - Current tips: CBS `dcd96732`, CBE `9a1f5f28`, CBM `8acb628`, CBC `11943f14`.
-  CBM `CBP-CI-001` is **PASS** (`docs/1.2.0/evidence/v12-cbm.json`); CBM only
-  has `CBP-DOC-001 WARN (11)`. No blocking failure on any tip.
+  CBM CI-001 PASS; no blocking failure on any tip. Matrix in
+  `docs/1.2.0/E2E_MATRIX.md`.
 
 ## [5] External manifest structure — PASS
 
 | Target | Manifest | Validation |
 | --- | --- | --- |
-| CBC `11943f14` | `01438d31067f05508454c81af068efc61c9797034c778746b94d77e3de63bac0` | `cbc_viewer.reports.validate_cbp` → PASS; package cbc/cbp/v0.1.0; base; 2 artifacts |
-| CBM `8acb628` | `967f15ccd8f222518ceb3c613ffda8d4f2ed04cfede958485f0bd79531e410cb` | `cbm_attach.reports.load_report` → PASS; B3 fields present; gate_status FAIL preserved |
+| CBC `11943f14` | `01438d31067f05508454c81af068efc61c9797034c778746b94d77e3de63bac0` | `validate_cbp` → PASS; cbc/cbp/v0.1.0; base; 2 artifacts |
+| CBM `8acb628` | `967f15ccd8f222518ceb3c613ffda8d4f2ed04cfede958485f0bd79531e410cb` | `load_report` → PASS; B3 fields present; `gate_status FAIL` preserved |
 
 CBM B3 fields: `body_hash_scope=base`, `release_body_hash`,
-`artifact_hashes=2`, `evidence_sha256`. **B2 is not claimed**: no real CBE
-report with `package_id: "cbm"`.
+`artifact_hashes=2`, `evidence_sha256`. **B2 not claimed** (no real CBE report
+with `package_id: "cbm"`). The external-manifest generator code is unchanged
+since the CBC/CBM validation; the release-path fix does not touch it.
 
 ## [6] Gate provenance — PASS
 
-CBC gate report `213e824392879ce539c6664725d5cd919b7f1d471de8d91b9f75d2557279e78b`:
-`package_id=cbc`, `producer_id=cbp`, `version=v0.1.0`.
-
-CBM gate report `ac4d243b94a13a2aa591ba96890fdd4d2f4984c30e6e199c15b9ccaf102be7d3`:
-`package_id=cbm`, `producer_id=cbp`, `version=v0.1.0`.
-
-- The two reports are byte-different (hashes above; not `a33971f5…`).
-- The manifests' `gates[]` equal the target reports' `gates[]`; CBM's
-  `encoding: FAIL` is preserved.
-- `cbp manifest` with CBC gate report + `--package-id cbm` → exit 2, no file.
-- `cbp manifest` with a `v0.0.0` gate report + `--version v0.1.0` → exit 2.
+- CBC gate report `213e8243…`: `package_id=cbc`, `producer_id=cbp`,
+  `version=v0.1.0`, PASS.
+- CBM gate report `ac4d243b…`: `package_id=cbm`, `producer_id=cbp`,
+  `version=v0.1.0`, **FAIL** (`encoding`: invalid UTF-8 in
+  `audit/v1.2.0-rc/b5-probe-declared.stdout.txt`).
+- The reports are byte-different; the manifests' `gates[]` equal the target
+  reports' gates.
+- `cbp manifest` with CBC gate + `--package-id cbm` → exit 2, no file.
+- `cbp manifest` with `v0.0.0` gate + `--version v0.1.0` → exit 2.
 - Tests: `test_gate_report_package_id_must_match_the_target`,
   `test_gate_report_version_must_match_the_target`,
   `test_manifest_gates_come_from_the_gate_report`,
   `test_gate_report_generator_records_target_identity`.
 
-CBM's `encoding FAIL` on `audit/v1.2.0-rc/b5-probe-declared.stdout.txt`
-(invalid UTF-8) is a real target finding, not a CBP provenance defect.
-
 ## [7] E2E / docs / release hygiene — PASS
 
-- `E2E_MATRIX.md` tips: CBS `dcd96732`, CBE `9a1f5f28`, CBM `8acb628`,
-  CBC `11943f14`; CBM CI-001 PASS.
-- CBC manifests recorded: `f897bc90…` (historical), `5f952d9b…` (earlier
-  R01–R19), `01438d31…` (current). `EXTERNAL_MANIFEST.md` and
-  `AUDIT_PACKAGE.md` use the same values.
+- `E2E_MATRIX.md`: current tips and CBM CI-001 PASS; no blocking failures.
+- CBC manifests recorded: `f897bc90…`, `5f952d9b…`, `01438d31…`.
 - CBP-DOC-001: CBP v12 PASS; the two problematic references were changed to
-  CBE/CBS names and the suffix search now ignores `.tmp-*`.
-- `docs/1.2.0/RELEASE_RUNBOOK.md` exists and forbids the local `dist/`.
+  CBE/CBS names, and `.tmp-*` is ignored in every rule walk.
+- `RELEASE_RUNBOOK.md` exists and forbids `cbp-dist` and local `dist/`.
 - `git ls-files` has no `.tmp*`, `pytest-current` or `__pycache__`.
-- No v1.2.0 tag, no PyPI upload, no GitHub Release; PR #1 is open and unmerged.
+- No v1.2.0 tag, no PyPI upload, no GitHub Release; PR #1 open and unmerged.
+
+## [8] Release artifact provenance — PASS
+
+- `release.yml` inputs include `rc_run_id`, `ci_run_id`, `release_tag`,
+  `e2e_run_id`, `expected_wheel_sha256`, `expected_sdist_sha256`.
+- `publish` downloads `gh run download "$RC_RUN_ID" -n cbp-rc -D rc` and
+  `quality-manifest-$CI_RUN_ID`; it does **not** download or publish `cbp-dist`.
+- It checks wheel `dafc9662…` and sdist `e58524e7…` against the expected inputs,
+  checks `rc/RC_ASSETS.sha256`, verifies both RC attestations, and uses
+  `rc/*.whl` / `rc/*.tar.gz` in `gh release create`.
+- `tools/release_preflight.py` runs the same checks without creating a Release:
+  correct inputs → 0 / `PREFLIGHT_OK`; wrong wheel or sdist hash → 3; tag/RC/CI
+  commit mismatch → 3.
+- Tests: `test_release_preflight.py` (4), `test_release_workflow.py` (4).
+
+## [9] Tag / merge / run consistency — PASS
+
+- The Fast-forward path is documented and is the only supported path for this
+  RC: `merge --ff-only 1.2.0-dev`, tag `v1.2.0` at `d3ec73e`; then
+  `tag_commit == rc_run.head_sha == ci_run.head_sha == d3ec73e`.
+- `release.yml` and the preflight reject any disagreement with exit 3.
+- The runbook explicitly forbids tagging a GitHub merge commit and reusing RC
+  run `42599351558`; a merge commit would require new CI, new RC, new
+  attestation, and a new audit.
 
 ## Verdict
 
-All seven items pass for re-audit. The only non-PASS gate result in the train is
-CBM's real `encoding FAIL`; it is preserved in the CBM manifest and must be
-fixed by CBM, not waived. Release remains blocked on human approval.
+All nine items pass for re-audit. The only non-PASS gate result in the train is
+CBM's real `encoding FAIL`; it is preserved and must be fixed by CBM, not
+waived. Release remains blocked on human approval.
