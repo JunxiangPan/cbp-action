@@ -26,7 +26,7 @@ def test_canonical_hash_preserves_internal_whitespace() -> None:
 
 def test_v120_release_body_hashes_to_the_reported_values() -> None:
     raw = V120_BODY.read_bytes()
-    assert hashlib.sha256(raw).hexdigest() == V120_RAW_LF_HASH
+    assert hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest() == V120_RAW_LF_HASH
     assert canonical_body_hash(raw) == V120_CANONICAL_HASH
 
 
