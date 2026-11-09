@@ -8,21 +8,22 @@ GitHub Release. Merging the draft PR, tagging, and publishing are owner actions.
 | Item | Value |
 | --- | --- |
 | Branch | `1.2.0-dev` |
-| RC commit | `9ee52fb` (post-RC WT-001 extension) |
+| RC commit | `bb8d4d6` (WT-001 extension + temp-file hygiene) |
 | Draft PR | https://github.com/JunxiangPan/cbp-action/pull/1 |
-| PR CI | run `42543182239` — success (4 matrix cells, dogfood, sarif, checks) |
-| Action E2E | run `42543182242` — success (15/15 payload + consumer parity) |
-| RC build + attest | run `42543177062` — success |
-| wheel | `cbp_action-1.2.0-py3-none-any.whl`<br>`a7093d5e61e2f841027e4a3c5a1146ee55c8bc5ff89afa1df1ab73a6e8381b38` |
-| sdist | `cbp_action-1.2.0.tar.gz`<br>`5ece012328ebc2c43452bd018a21ebbc84582cb9c2edebe116409da846882b5b` |
+| PR CI | run `42543611171` — success (4 matrix cells, dogfood, sarif, checks) |
+| Action E2E | run `42543611163` — success (15/15 payload + consumer parity) |
+| RC build + attest | run `42543607201` — success |
+| wheel | `cbp_action-1.2.0-py3-none-any.whl`<br>`06f8c3d383d39ae4e42cee2a69abdaebdc15cae9fce63a65baf05da4d0998285` |
+| sdist | `cbp_action-1.2.0.tar.gz`<br>`49592d6bd5ae90450cfa6e7e6f2487829d40c97e77d8f2b7d0f4fe6c7113d844` |
 | Attestation | `gh attestation verify` exit 0 for both; subject digest equals the local hash; repository `JunxiangPan/cbp-action` |
 | PyPI | `https://pypi.org/pypi/cbp-action/1.2.0/json` → **404** |
 | GitHub Release | `v1.2.0` → **not found** |
 
 Post-RC owner request (2026-11-09): extend CBP-WT-001 to reject conflict markers
 in tracked files, add the clean/committed-marker fixtures, and run a real E2E
-against CBS `contract/v1.7.1`. That change produced commit `9ee52fb`; it
-supersedes the earlier `5da8b87` candidate. The E2E failed as expected on three
+against CBS `contract/v1.7.1`. That change produced commit `9ee52fb`; a follow-up removed accidentally
+tracked `.tmp-*` reports and fixed the ignore rule, producing `bb8d4d6`, the
+current candidate. It supersedes `5da8b87`. The E2E failed as expected on three
 committed markers in CBS `.github/workflows/vm-proof.yml:15/16/18`
 (`docs/1.2.0/E2E_MATRIX.md`).
 
@@ -98,15 +99,15 @@ for their real E2E, so they must move to 1.2.0 before the train can pass.
    accepted baseline with expiry before they block.
 4. **RC rebuild policy** — the RC workflow ignores docs-only pushes
    (`paths-ignore: docs/**, *.md`). Code commits still rebuild and require
-   re-attestation. The candidate for this audit is `9ee52fb` / run
-   `42543177062`; `5da8b87` is superseded.
+   re-attestation. The candidate for this audit is `bb8d4d6` / run
+   `42543607201`; `5da8b87` and `9ee52fb` are superseded.
 
 ## Reproduction
 
 ```bash
 python -m pytest -q tests
 python -m cbp.cli --root . --v12 --v12-report v12-report.json
-gh run view 42543177062 --repo JunxiangPan/cbp-action
+gh run view 42543607201 --repo JunxiangPan/cbp-action
 gh attestation verify cbp_action-1.2.0-py3-none-any.whl --repo JunxiangPan/cbp-action
 ```
 
