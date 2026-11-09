@@ -209,9 +209,19 @@ jobs:
       - name: Remint the manifest from the RC hashes and the final body
         env:
           CI_RUN_ID: ${{ inputs.ci_run_id }}
+          RC_RUN_ID: ${{ inputs.rc_run_id }}
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          python tools/remint_manifest.py             --manifest artifact/quality-manifest.json             --artifact rc/*.whl --artifact rc/*.tar.gz             --release-body rc/RELEASE_BODY.md             --expect-run-id "$CI_RUN_ID"             --expect-commit "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"             --out artifact/quality-manifest.json
+          python tools/remint_manifest.py \
+            --manifest artifact/quality-manifest.json \
+            --artifact rc/*.whl --artifact rc/*.tar.gz \
+            --release-body rc/RELEASE_BODY.md \
+            --artifact-repository "$GITHUB_REPOSITORY" \
+            --artifact-run-id "$RC_RUN_ID" \
+            --artifact-name cbp-rc \
+            --expect-run-id "$CI_RUN_ID" \
+            --expect-commit "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" \
+            --out artifact/quality-manifest.json
           (cd artifact && sha256sum quality-manifest.json > quality-manifest.json.sha256)
       - name: Verify the reminted manifest
         env:

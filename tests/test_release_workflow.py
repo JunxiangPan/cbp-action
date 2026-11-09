@@ -40,6 +40,8 @@ def test_publish_remints_and_checks_the_manifest() -> None:
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "tools/remint_manifest.py" in text
     assert "--release-body rc/RELEASE_BODY.md" in text
+    assert "--artifact-repository" in text
+    assert "--artifact-name cbp-rc" in text
     assert "Assert manifest artifact and body hashes equal" in text
     assert "Verify manifest binds the published body" in text
     assert "CBP-BODY-001" in text

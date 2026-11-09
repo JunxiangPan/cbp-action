@@ -33,6 +33,11 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, list[Path]]:
             "cbp_action-1.2.0.tar.gz": "b" * 64,
         },
         "release_body_hash": "c" * 64,
+        "artifact_repository": {
+            "repository": "JunxiangPan/cbp-action",
+            "run_id": "42602640952",
+            "artifact_name": "cbp-rc",
+        },
         "evidence_sha256": "d" * 64,
         "body_hash_scope": "base",
         "ci_run_id": "42602640952",

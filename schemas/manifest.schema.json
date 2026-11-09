@@ -1,29 +1,26 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "CBP quality manifest (CONTRACT v1.7)",
+  "$id": "https://github.com/JunxiangPan/cbp-action/schemas/manifest.schema.json",
+  "title": "CBP quality manifest v1.7",
   "type": "object",
   "required": [
-    "schema_version",
-    "package_id",
-    "producer_id",
-    "version",
-    "gate_status",
-    "applicable_gate_count",
-    "skip_count",
-    "skip_ratio",
-    "blocking_skip",
-    "gates",
-    "artifact_hashes",
-    "release_body_hash",
-    "evidence_sha256",
-    "body_hash_scope"
+    "schema_version", "package_id", "producer_id", "version", "gate_status",
+    "applicable_gate_count", "skip_count", "skip_ratio",
+    "blocking_skip", "gates", "artifact_hashes", "artifact_repository",
+    "release_body_hash", "body_hash_scope", "evidence_sha256", "ci_commit_sha"
   ],
   "properties": {
     "schema_version": {"const": "1"},
-    "package_id": {"type": "string", "minLength": 1},
-    "producer_id": {"type": "string", "minLength": 1},
-    "version": {"type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"},
-    "gate_status": {"enum": ["PASS", "FAIL", "SKIPPED_INFRA", "PRECONDITION_FAIL"]},
+    "package_id": {
+      "type": "string",
+      "enum": ["cbs", "cbe", "cbp", "cbm", "cbc", "cbg"]
+    },
+    "producer_id": {"type": "string", "enum": ["cbe", "cbp"]},
+    "version": {"type": "string", "pattern": "^v?[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "gate_status": {
+      "type": "string",
+      "enum": ["PASS", "FAIL", "SKIPPED_INFRA", "PRECONDITION_FAIL", "NOT_UPLOADED"]
+    },
     "applicable_gate_count": {"type": "integer", "minimum": 0},
     "skip_count": {"type": "integer", "minimum": 0},
     "skip_ratio": {"type": "number", "minimum": 0, "maximum": 1},
@@ -35,25 +32,33 @@
         "required": ["name", "status"],
         "properties": {
           "name": {"type": "string", "minLength": 1},
-          "status": {"enum": ["PASS", "FAIL", "SKIPPED"]},
+          "status": {"type": "string", "enum": ["PASS", "FAIL", "SKIPPED"]},
           "reason": {"type": "string"}
         },
-        "additionalProperties": true
+        "additionalProperties": false
       }
     },
     "artifact_hashes": {
       "type": "object",
-      "additionalProperties": {"$ref": "#/$defs/hash"}
+      "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
     },
-    "release_body_hash": {"$ref": "#/$defs/hash"},
-    "evidence_sha256": {"$ref": "#/$defs/hash"},
-    "body_hash_scope": {"enum": ["base", "full"]},
-    "artifact_repository": {"type": "string"},
-    "ci_run_id": {"type": "string"},
-    "ci_commit_sha": {"type": "string"}
+    "artifact_repository": {
+      "type": "object",
+      "required": ["repository", "run_id", "artifact_name"],
+      "properties": {
+        "repository": {"type": "string", "pattern": "^[^/]+/[^/]+$"},
+        "run_id": {"type": "string", "minLength": 1},
+        "artifact_name": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "release_body_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "body_hash_scope": {"const": "base"},
+    "evidence_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "ci_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "ci_run_id": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "minLength": 1},
+    "generated_by": {"type": "string", "minLength": 1}
   },
-  "additionalProperties": true,
-  "$defs": {
-    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
-  }
+  "additionalProperties": false
 }

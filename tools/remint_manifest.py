@@ -67,7 +67,7 @@ def remint(
         updated["release_body_hash"] = canonical_body_hash(release_body)
     unsigned = {key: value for key, value in updated.items() if key != "evidence_sha256"}
     updated["evidence_sha256"] = canonical_sha256(unsigned)
-    problems = report_schema.validate_manifest(updated, require_body_scope=True)
+    problems = report_schema.validate_manifest(updated, require_body_scope=True, require_rc2=True)
     if problems:
         raise RemintError("reminted manifest is invalid: " + "; ".join(problems))
     return updated
@@ -101,6 +101,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--artifact", action="append", default=[])
     parser.add_argument("--out", default="")
     parser.add_argument("--release-body", default="")
+    parser.add_argument("--artifact-repository", default="")
+    parser.add_argument("--artifact-run-id", default="")
+    parser.add_argument("--artifact-name", default="")
     parser.add_argument("--expect-run-id", default="")
     parser.add_argument("--expect-commit", default="")
     parser.add_argument("--check-only", action="store_true")
@@ -115,6 +118,16 @@ def main(argv: list[str] | None = None) -> int:
             raise RemintError(
                 f"ci_commit_sha mismatch: manifest={manifest.get('ci_commit_sha')!r} expected={args.expect_commit!r}"
             )
+        if any((args.artifact_repository, args.artifact_run_id, args.artifact_name)):
+            if not all((args.artifact_repository, args.artifact_run_id, args.artifact_name)):
+                raise RemintInputError(
+                    "--artifact-repository, --artifact-run-id and --artifact-name are required together"
+                )
+            manifest["artifact_repository"] = {
+                "repository": args.artifact_repository,
+                "run_id": args.artifact_run_id,
+                "artifact_name": args.artifact_name,
+            }
         artifacts = [Path(item) for item in args.artifact]
         release_body = None
         if args.release_body:

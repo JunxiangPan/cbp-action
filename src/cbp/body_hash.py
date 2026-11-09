@@ -18,7 +18,22 @@ import hashlib
 from pathlib import Path
 
 
+BASE_END_MARKERS = (
+    b"<!-- CBP-BODY-BASE-END -->",
+    b"<!-- CBC-EVIDENCE-BEGIN -->",
+)
+
+
+def base_body_bytes(data: bytes) -> bytes:
+    """Return the bytes before the first base-end marker."""
+    indexes = [data.find(marker) for marker in BASE_END_MARKERS if marker in data]
+    if indexes:
+        data = data[: min(indexes)]
+    return data
+
+
 def canonical_body_bytes(data: bytes) -> bytes:
+    data = base_body_bytes(data)
     text = data.decode("utf-8-sig")
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     text = text.rstrip("\n")

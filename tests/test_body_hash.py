@@ -34,3 +34,8 @@ def test_hash_is_sha256_of_the_canonical_bytes() -> None:
     data = b"# cbp\n"
     expected = hashlib.sha256(canonical_body_bytes(data)).hexdigest()
     assert canonical_body_hash(data) == expected
+
+def test_base_end_marker_excludes_the_appendix() -> None:
+    base = b"# cbp\n\nbase\n"
+    body = base + b"\n<!-- CBP-BODY-BASE-END -->\n## CBM\n- NOT_UPLOADED\n"
+    assert canonical_body_hash(body) == canonical_body_hash(base)

@@ -100,6 +100,7 @@ https://pypi.org/project/cbp-action/{version}/
 - ai-release is structured evidence only, not natural-language summarization.
 - Section B gates are audit-only and do not block publishing.
 """
+    body = body.rstrip("\n") + "\n\n<!-- CBP-BODY-BASE-END -->\n"
     body_bytes = canonical_body_bytes(body.encode("utf-8"))
     Path(args.output).write_bytes(body_bytes)
     print(f"RELEASE_BODY_GENERATED {args.output} sha256={canonical_body_hash(body_bytes)} wheel_sha256={digest}")
