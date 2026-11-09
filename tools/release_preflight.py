@@ -18,6 +18,9 @@ from pathlib import Path
 
 HASH_RE = re.compile(r"^[0-9a-f]{64}$")
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from tools.remint_manifest import RemintError, remint  # noqa: E402
 
 
 class PreflightError(RuntimeError):
@@ -83,7 +86,7 @@ def _check_rc_assets(rc_dir: Path, wheel: Path, sdist: Path) -> None:
             raise PreflightError(f"RC_ASSETS.sha256 hash mismatch for {artifact.name}")
 
 
-def _check_manifest(artifact_dir: Path) -> None:
+def _check_manifest(artifact_dir: Path, wheel: Path, sdist: Path) -> None:
     manifest = artifact_dir / "quality-manifest.json"
     digest = artifact_dir / "quality-manifest.json.sha256"
     if not manifest.is_file() or not digest.is_file():
@@ -97,6 +100,10 @@ def _check_manifest(artifact_dir: Path) -> None:
     expected = digest.read_text(encoding="utf-8").split()[0].lower()
     if expected != _sha256(manifest):
         raise PreflightError("quality-manifest.json.sha256 does not match the manifest")
+    try:
+        remint(data, [wheel, sdist])
+    except RemintError as exc:
+        raise PreflightError(f"manifest cannot be reminted from the RC artifacts: {exc}") from exc
 
 
 def _check_body(rc_dir: Path, wheel: Path, notes: Path, tag: str, ci_run: str, e2e_run: str) -> None:
@@ -147,7 +154,7 @@ def validate(
     _check_hash(wheel, expected_wheel_sha256.lower(), "wheel")
     _check_hash(sdist, expected_sdist_sha256.lower(), "sdist")
     _check_rc_assets(rc_dir, wheel, sdist)
-    _check_manifest(artifact_dir)
+    _check_manifest(artifact_dir, wheel, sdist)
     notes = artifact_dir / "docs" / "RELEASE_NOTES.generated.md"
     _check_body(rc_dir, wheel, notes, tag, ci_run, e2e_run)
     return {"wheel": str(wheel), "sdist": str(sdist)}

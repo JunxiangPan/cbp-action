@@ -36,6 +36,13 @@ def test_preflight_job_runs_the_tool() -> None:
     assert "publish" in jobs and "preflight" in jobs["publish"]["needs"]
 
 
+def test_publish_remints_and_checks_the_manifest() -> None:
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "tools/remint_manifest.py" in text
+    assert "Assert manifest artifact_hashes equal the RC hashes" in text
+    assert "--check-only" in text
+
+
 def test_clean_verify_downloads_rc_artifact() -> None:
     text = WORKFLOW.read_text(encoding="utf-8")
     assert 'gh run download "$RC_RUN_ID" -n cbp-rc -D dist-verify' in text

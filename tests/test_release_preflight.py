@@ -33,6 +33,10 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, str, str]:
         "producer_id": "cbp",
         "version": "v1.2.0",
         "gate_status": "PASS",
+        "applicable_gate_count": 1,
+        "skip_count": 0,
+        "skip_ratio": 0.0,
+        "blocking_skip": False,
         "gates": [{"name": "encoding", "status": "PASS", "reason": ""}],
         "artifact_hashes": {wheel.name: wheel_hash},
         "release_body_hash": "a" * 64,
@@ -92,3 +96,16 @@ def test_commit_mismatch_is_exit_3(tmp_path: Path) -> None:
     argv = _argv(rc, artifact, wheel_hash, sdist_hash)
     argv[argv.index("--rc-head") + 1] = "b" * 40
     assert rp.main(argv) == 3
+
+
+def test_preflight_accepts_a_manifest_that_needs_reminting(tmp_path: Path, capsys) -> None:
+    rc, artifact, wheel_hash, sdist_hash = _fixture(tmp_path)
+    manifest_path = artifact / "quality-manifest.json"
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    data["artifact_hashes"] = {"cbp_action-1.2.0-py3-none-any.whl": "0" * 64}
+    manifest_path.write_text(json.dumps(data), encoding="utf-8")
+    (artifact / "quality-manifest.json.sha256").write_text(
+        f"{_sha(manifest_path.read_bytes())}  quality-manifest.json\n", encoding="utf-8"
+    )
+    assert rp.main(_argv(rc, artifact, wheel_hash, sdist_hash)) == 0
+    assert "PREFLIGHT_OK" in capsys.readouterr().out
