@@ -32,11 +32,26 @@ creates a release (`attest-build-provenance` + artifact upload).
 
 ## Test evidence
 
-- Local: **390 passed**, 43 warnings.
+- Local: **402 passed**, 43 warnings.
 - CI coverage: `security_core=91.64%/90.00%`, `cbp=90.55%/80.00%`.
 - `docs/1.2.0/E2E_MATRIX.md`: 5 repositories × 12 rules, read-only, plus the
   requested CBS `contract/v1.7.1` E2E (exit 3, three committed conflict
   markers in `.github/workflows/vm-proof.yml:15/16/18`).
+
+## External-package manifest (post-RC request)
+
+`cbp manifest` now writes a CONTRACT §5 manifest for a subject package using a
+real gate report plus that package's artifacts and body. Real E2E, read-only:
+
+| Target | Generated manifest | Target-side check |
+| --- | --- | --- |
+| CBC `48d9762` | `f897bc905d4cebfa82cc83f137440cb0a024e0dd060eaa022bca1fb7a3942724`, `package_id cbc`, `producer_id cbp`, base scope | `cbc_viewer.reports.validate_cbp` → PASS, base body hash matches |
+| CBM `45c49bc` | `bc5461e61a4167dfae21fdf12fe169fa8339c7f20eac09f861799d89926196c1`, `package_id cbm`, `producer_id cbp`, base scope | `cbm_attach.reports.load_report` → PASS; B3 fields complete |
+
+CBC's CBP input blocker is removed; R01–R19 still need CBC's real CBE report and
+official base body. CBM B3 is field-level complete; **B2 is not claimed**.
+Details and evidence files: `docs/1.2.0/EXTERNAL_MANIFEST.md`,
+`docs/1.2.0/evidence/`.
 
 ## Twelve rules — fixtures, tests, exit codes
 

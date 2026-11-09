@@ -28,6 +28,12 @@ Release candidate only: no PyPI upload and no GitHub Release until human audit.
   malformed entries exit 2.
 - `--v12-report` writes a machine-readable rule report; `--v12-only` selects
   rules; `--waivers` and `--v12-baseline` load the entry files.
+- `cbp manifest` generates a CONTRACT §5 quality manifest for an external
+  subject package (`--package-id`, `--producer-id`, `--gate-report`,
+  `--artifact`, `--release-body`, `--body-hash-scope base`, `--evidence`).
+  Missing inputs or a digest mismatch are exit 2 and write nothing; a FAIL gate
+  report stays FAIL. CBC `validate_cbp` accepts the real CBC manifest and CBM's
+  B3 field check accepts the real CBM-scoped manifest (B2 not claimed).
 - Real-repository E2E (read-only) and consumer parity are recorded in
   `docs/1.2.0/E2E_MATRIX.md`; the 12-rule delivery matrix is
   `docs/1.2.0/RULE_MATRIX.md`.

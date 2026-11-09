@@ -138,6 +138,9 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
         return _errata(argv[1:])
     if argv and argv[:2] == ["policy", "test"]:
         return _policy_test(argv[2:])
+    if argv and argv[0] == "manifest":
+        from . import package_manifest
+        return package_manifest.main(argv[1:])
     parser = argparse.ArgumentParser(prog="cbp")
     parser.add_argument("--root", default=".")
     parser.add_argument("--config", default="")

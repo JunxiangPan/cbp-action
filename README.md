@@ -242,6 +242,29 @@ Events are `cbp.run.start`, `cbp.gate.result` and `cbp.run.end`, chained by
 `prev_hash` / `event_hash`. `--cbc-event-hmac-env NAME` reads an HMAC-SHA256 key
 from the environment. Dropped events are counted and printed, never silent.
 
+### External-package manifest
+
+`cbp manifest` writes a CONTRACT §5 manifest for a **subject** package (cbc,
+cbm, ...) using a real gate report plus that package's artifacts and body:
+
+```bash
+python -m cbp.cli manifest \
+  --package-id cbc --producer-id cbp --version v0.1.0 \
+  --gate-report gate-report.json \
+  --artifact dist/pkg-0.1.0-py3-none-any.whl \
+  --artifact dist/pkg-0.1.0.tar.gz \
+  --release-body RELEASE_BODY.md \
+  --body-hash-scope base \
+  --out quality-manifest.json
+```
+
+`--artifact` and `--evidence` are repeatable; `--artifact-sha256 NAME=HEX`
+checks an expected digest. Missing gate report / artifact / body / evidence,
+an unsupported scope, or a digest mismatch is exit 2 and writes nothing. A
+failing gate report is preserved as `FAIL`, never rewritten to `PASS`.
+`body_hash_scope: base` hashes the bytes before
+`<!-- CBC-EVIDENCE-BEGIN -->` when present; otherwise the whole body.
+
 ## Configuration
 
 See [`schemas/config.schema.json`](schemas/config.schema.json).

@@ -123,3 +123,15 @@ The scan exposed a Windows decoding defect: `text=True` decodes with the locale
 codec (GBK), and `git ls-files -z` can contain non-UTF-8 bytes, which left
 `stdout` as `None`. `_git` now decodes explicitly as UTF-8 with replacement and
 always returns a string.
+
+## External-package manifest (field capability, not a rule)
+
+`cbp manifest` adds `package_id`/`producer_id` as command inputs and writes the
+same CONTRACT §5 fields that `dogfood_manifest` writes for CBP itself:
+`artifact_hashes`, `release_body_hash`, `evidence_sha256`, `body_hash_scope`,
+gate counts and gates. It does not add a thirteenth rule and does not change the
+twelve-rule exit-code model.
+
+Real E2E: CBC `validate_cbp` PASS on a generated `package_id: "cbc"` manifest;
+CBM `load_report` PASS with `package_id: "cbm"`, `producer_id: "cbp"` and B3
+fields complete. B2 remains open. Details: `docs/1.2.0/EXTERNAL_MANIFEST.md`.

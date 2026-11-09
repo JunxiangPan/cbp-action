@@ -1,0 +1,12 @@
+CBC validation (cbc-event HEAD 48d9762)
+  from cbc_viewer.reports import validate_cbp
+  CBC_VALIDATE_CBP=PASS
+  package_id= cbc producer_id= cbp scope= base
+  body_hash_matches_base= True
+  artifacts= 2
+
+CBM validation (cbm HEAD 45c49bc)
+  from cbm_attach.reports import load_report
+  CBM_LOAD=PASS package_id= cbm version= v0.1.0
+  B3_FIELDS {'body_hash_scope': 'base', 'release_body_hash': True,
+             'artifact_hashes': 2, 'evidence_sha256': True}
