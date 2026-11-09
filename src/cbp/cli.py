@@ -6,6 +6,7 @@ import importlib.metadata
 import json
 import os
 import platform
+import re
 import sys
 from pathlib import Path
 
@@ -166,6 +167,9 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
     parser.add_argument("--manifest", default="")
     parser.add_argument("--sarif-output", default="")
     parser.add_argument("--report-json", default="")
+    parser.add_argument("--package-id", default="")
+    parser.add_argument("--producer-id", default="")
+    parser.add_argument("--version", default="")
     parser.add_argument("--parse-report", default="")
     parser.add_argument("--observed-exit-code", type=int, default=None)
     parser.add_argument("--baseline", default="")
@@ -585,11 +589,30 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
     if emitter.enabled:
         print(f"CBC_EVENT emitted={emitter.emitted} dropped={emitter.dropped} dir={emitter.event_dir}")
     if args.report_json:
+        report_package_id = args.package_id or report_schema.PACKAGE_ID
+        report_producer_id = args.producer_id or report_schema.PRODUCER_ID
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", report_package_id):
+            print(json.dumps({"gate_status": "FAIL", "exit_code": report_schema.EXIT_INPUT,
+                              "error": f"invalid --package-id {report_package_id!r}"}, ensure_ascii=False))
+            return report_schema.EXIT_INPUT
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", report_producer_id):
+            print(json.dumps({"gate_status": "FAIL", "exit_code": report_schema.EXIT_INPUT,
+                              "error": f"invalid --producer-id {report_producer_id!r}"}, ensure_ascii=False))
+            return report_schema.EXIT_INPUT
+        if args.version:
+            raw_version = args.version.lstrip("vV")
+            if not re.fullmatch(r"\d+\.\d+\.\d+", raw_version):
+                print(json.dumps({"gate_status": "FAIL", "exit_code": report_schema.EXIT_INPUT,
+                                  "error": f"invalid --version {args.version!r}"}, ensure_ascii=False))
+                return report_schema.EXIT_INPUT
+            report_version = "v" + raw_version
+        else:
+            report_version = "v" + str(getattr(cfg, "release_version", "") or "0.0.0").lstrip("v")
         report = {
             "schema_version": report_schema.MANIFEST_SCHEMA_VERSION,
-            "package_id": report_schema.PACKAGE_ID,
-            "producer_id": report_schema.PRODUCER_ID,
-            "version": "v" + str(getattr(cfg, "release_version", "") or "0.0.0").lstrip("v"),
+            "package_id": report_package_id,
+            "producer_id": report_producer_id,
+            "version": report_version,
             "gate_status": gate_status,
             "exit_code": exit_code,
             "applicable_gate_count": applicable,

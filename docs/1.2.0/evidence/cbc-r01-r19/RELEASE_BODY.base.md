@@ -17,8 +17,8 @@ Unreleased — cbc_viewer 0.1.0
 
 ## Honesty boundary
 
-Assembled from the CBC repository at HEAD for the CBP R01-R19 feasibility run.
-No official CBC release exists; the upload status is NOT_UPLOADED.
+Assembled from CBC 11943f14 for the CBP external-manifest E2E.
+Not an official GitHub Release body; upload status is NOT_UPLOADED.
 
 <!-- CBC-EVIDENCE-BEGIN -->
 placeholder

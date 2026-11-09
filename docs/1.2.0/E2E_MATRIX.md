@@ -1,6 +1,8 @@
 # CBP 1.2.0 — Real-repository E2E matrix
 
-Status: **RC evidence**. No repository outside `cbp-action-release` was modified.
+Status: **RC evidence, awaiting human re-audit.** No repository outside
+`cbp-action-release` was modified. Target repositories were fetched at the
+requested commits into temporary read-only copies.
 
 ## Method
 
@@ -8,18 +10,18 @@ Status: **RC evidence**. No repository outside `cbp-action-release` was modified
 python -m cbp.cli --root <repo> --v12 --v12-report <report>.json
 ```
 
-Read-only: the rule engine only reads files, runs `git status` (no index writes)
-and parses YAML/Python text. Reports were written outside the scanned
-repositories. Windows paths were passed in native form (`D:\...`) because
-`git -C` does not accept MSYS `/d/...` paths.
+Read-only: the rule engine reads files, runs `git status` (no index writes) and
+parses YAML/Python text. Reports are written outside the scanned repositories.
+Windows paths are passed in native form because `git -C` does not accept MSYS
+`/d/...` paths.
 
-| Repository | Tip |
-| --- | --- |
-| CBP (`1.2.0-dev`) | this branch (Step 1–3) |
-| CBS | `80e54e1` |
-| CBE | `3390898` |
-| CBM | `00d984e` |
-| CBC | `ae18d0c` |
+| Repository | Tip | How |
+| --- | --- | --- |
+| CBP (`1.2.0-dev`) | this branch | working tree |
+| CBS | `dcd96732b58b6991fdddf80f17ece52585c63da9` | temp clone |
+| CBE | `9a1f5f2891eeb06682107d3a82bf8b2ef5746955` | temp clone |
+| CBM | `8acb62856b5008b11a072e0e2f6af7df348b1a49` | temp clone |
+| CBC | `11943f14f8bc5907b17338f576d9fee493e798d7` | temp clone |
 
 ## Matrix
 
@@ -27,136 +29,135 @@ repositories. Windows paths were passed in native form (`D:\...`) because
 
 | Rule | CBP | CBS | CBE | CBM | CBC |
 | --- | --- | --- | --- | --- | --- |
-| CBP-CI-001 TEST_ROOTS_IN_CI | P | P | P | **F(1)** | P |
+| CBP-CI-001 TEST_ROOTS_IN_CI | P | P | P | **P** | P |
 | CBP-VER-001 VERSION_SYNC | P | P | P | P | P |
 | CBP-QA-001 QA_COUNTS_CONSISTENT | P | P | P | P | P |
 | CBP-DEBT-001 DEBT_EVIDENCE | P | P | P | P | P |
 | CBP-SIGN-001 SIGN_TOOLS_IN_TAG | P | P | P | P | P |
 | CBP-WT-001 WORKTREE_CLEAN_AFTER_GATES | P | P | P | P | P |
 | CBP-BIN-001 BINARY_AUTHENTICODE | P | W(1) | P | P | P |
-| CBP-DOC-001 DOC_REFERENCES_EXIST | P | W(29) | W(4) | W(12) | P |
+| CBP-DOC-001 DOC_REFERENCES_EXIST | P | W(32) | P | W(11) | P |
 | CBP-CLAIM-001 CAPABILITY_CLAIMS | P | P | P | P | P |
 | CBP-COV-001 COVERAGE_HARD | P | P | P | P | P |
 | CBP-PROOF-001 PROOF_HIGH_TIER | P | P | P | P | P |
 | CBP-SLOP-001 DOCSTRING_SLOP | P | P | P | P | P |
-| **Exit** | 0 | 0 | 0 | **3** | 0 |
+| **Exit** | 0 | 0 | 0 | 0 | 0 |
 
-## Blocking failure
-
-| Repository | Rule | Finding | Classification |
-| --- | --- | --- | --- |
-| CBM | CBP-CI-001 | `tests: test root is not executed by any workflow` | **true positive**. `cbm-attach.yml` has no test step; the repo has no CI test job and no remote. Not waived: fixing it belongs to CBM. |
-
-No other blocking rule failed. There is no unexplained blocking failure.
+**No blocking rule failed on any current tip.** CBM CI-001 moved from F(1) to
+PASS after CBM added its CI test job. The only findings are warnings.
 
 ## Warnings
 
-Warning rules do not block in 1.2.0 (they will in 1.2.1); they are recorded here
-so the baseline can be reviewed.
+Warning rules do not block in 1.2.0 (they will in 1.2.1); they are recorded so a
+baseline can be reviewed.
 
 | Repository | Rule | Count | Classification |
 | --- | --- | ---: | --- |
 | CBS | CBP-BIN-001 | 1 | true positive: `START-INSTALLER.exe` has no Authenticode blob |
-| CBS | CBP-DOC-001 | 29 | true positive: documentation drift (old status docs, removed tests, runtime-only paths). Sample: `DEPLOYMENT.md:18 → docs/STATUS_v1.6.1.md` |
-| CBE | CBP-DOC-001 | 4 | true positive: `docs/E2E_MATRIX_V1.md` names CBE-08…CBE-11 test files that are not implemented yet |
-| CBM | CBP-DOC-001 | 12 | mixed: `docs/v1.7/*` is external contract namespace (skipped); `tools/dogfood_manifest.py` is CBP-owned and `tools/release_body_v17.py` is CBS-owned; `cbm-evidence/*` is a runtime path. Baselined, not waived. |
+| CBS | CBP-DOC-001 | 32 | true positive: documentation drift (old status docs, removed tests, runtime-only paths) |
+| CBM | CBP-DOC-001 | 11 | true positive: README references `cbm-evidence/*` runtime paths that are not in the tree |
 
-No warning is a false positive after the fixes below.
+No warning is a false positive after the implementation fixes listed below.
+
+## Gate provenance (external manifest)
+
+The CBC/CBM gate reports are no longer CBP-self reports. They are produced by
+running the gates on the target root with explicit identity:
+
+```bash
+python -m cbp.cli --root <target> --mode audit --report-json <report>.json \
+  --package-id <cbc|cbm> --producer-id cbp --version v0.1.0
+```
+
+| Target | Gate report sha256 | package_id / producer_id / version | Result |
+| --- | --- | --- | --- |
+| CBC `11943f14` | `213e824392879ce539c6664725d5cd919b7f1d471de8d91b9f75d2557279e78b` | `cbc` / `cbp` / `v0.1.0` | PASS |
+| CBM `8acb628` | `ac4d243b94a13a2aa591ba96890fdd4d2f4984c30e6e199c15b9ccaf102be7d3` | `cbm` / `cbp` / `v0.1.0` | **FAIL** |
+
+The two reports are byte-different. CBM's real gate finding is:
+
+```text
+encoding: FAIL audit/v1.2.0-rc/b5-probe-declared.stdout.txt:
+  invalid UTF-8: 'utf-8' codec can't decode byte 0xcb in position 35
+```
+
+This is a true CBM finding at its current tip, not a CBP self-report and not a
+rule false positive. The CBM manifest preserves `gate_status: FAIL`; it is not
+rewritten to PASS.
+
+`cbp manifest` rejects a gate report whose `package_id`, `producer_id` or
+`version` does not match its own arguments (exit 2, no file written).
+
+## External-package manifest E2E (CBC / CBM)
+
+| Target | Manifest | Target-side validation |
+| --- | --- | --- |
+| CBC `11943f14` | `01438d31067f05508454c81af068efc61c9797034c778746b94d77e3de63bac0`, `package_id cbc`, `producer_id cbp`, `v0.1.0`, base | `cbc_viewer.reports.validate_cbp` → PASS |
+| CBM `8acb628` | `967f15ccd8f222518ceb3c613ffda8d4f2ed04cfede958485f0bd79531e410cb`, `package_id cbm`, `producer_id cbp`, `v0.1.0`, base | `cbm_attach.reports.load_report` → PASS; B3 fields complete; `gate_status FAIL` preserved |
+
+CBC manifests recorded across the audit:
+
+| Manifest | Role |
+| --- | --- |
+| `f897bc905d4cebfa82cc83f137440cb0a024e0dd060eaa022bca1fb7a3942724` | historical; artifacts not retained |
+| `5f952d9bf82413520b87d31a41fba85f49e8242e203f83cc32e6c3d33a5cab20` | earlier R01–R19 run |
+| `01438d31067f05508454c81af068efc61c9797034c778746b94d77e3de63bac0` | current R01–R19 run, target-scoped gate report |
+
+CBC R02–R19 on the current inputs: **18/18 assertions matched** (17 executed;
+R16 skipped on Windows because symlink creation needs a privilege). R01 requires
+an actually uploaded release and is **NOT RUN**; no upload is claimed. Evidence:
+`docs/1.2.0/evidence/cbc-r01-r19/`.
+
+CBM B3 is field-level complete (`body_hash_scope`, `release_body_hash`,
+`artifact_hashes`, `evidence_sha256`). **B2 is not claimed**: no real CBE report
+with `package_id: "cbm"` exists.
+
+## Historical: CBS contract/v1.7.1
+
+Earlier in the audit, `contract/v1.7.1` @ `5d0b100` failed CBP-WT-001 with three
+committed conflict markers in `.github/workflows/vm-proof.yml:15/16/18`. That
+finding is historical; the current CBS tip passes all twelve rules.
 
 ## False positives found and fixed in the implementation
 
 | Symptom | Fix | Fixture |
 | --- | --- | --- |
-| Inline `run: pytest` ignored (CBC/CBS) | parse both block and inline `run:` | `test_ci_001_passes_when_the_root_runs` |
+| Inline `run: pytest` ignored | parse both block and inline `run:` | `test_ci_001_passes_when_the_root_runs` |
 | Bare `pytest` (no path) did not cover roots | treat a pytest line without any root path as covering all roots | `test_ci_001_ignores_a_path_in_a_comment` |
 | `passed`/`PASSED` QA status rejected | accept PASS/PASSED/FAIL/FAILED/SKIP/SKIPPED/WARN/PARTIAL | `test_qa_001_passes_consistent_counts` |
-| `examples/…/tests` treated as a project test root | ignore examples/fixtures/vendor/third_party | CBP self-run (12/12) |
-| `docs/v1.7/*`, `schemas/v1.7/*` treated as local | external contract namespace | CBE run (DOC 14 → 4) |
-| Planned links flagged | skip lines marked pending/planned/not yet/future/todo | CBE E2E matrix |
+| `examples/…/tests` treated as a project root | ignore examples/fixtures/vendor/third_party | CBP self-run |
+| `docs/v1.7/*`, `schemas/v1.7/*` treated as local | external contract namespace | CBE run |
+| Planned links flagged | skip lines marked pending/planned/not yet/future/todo | CBE matrix |
 | Bare filenames flagged | resolve a bare filename as weak, never fatal | CBP self-run |
-| Command names in backticks / code fences / headings flagged as claims | strip code spans and fences, skip headings and CLI usage | CBE run (CLAIM 14 → 0) |
-| `claim this …` as a prohibited claim | soft marker `claim this` | CBS run (CLAIM 2 → 0) |
+| Command names in code spans/fences/headings flagged as claims | strip code, skip headings and CLI usage | CBE run |
+| Temporary `.tmp-*` clones scanned by rules | ignore `.tmp-*` in every file walk | CBP self-run |
+| Temp files resolved a missing doc reference by suffix | filter ignored paths in the suffix search | CBP self-run |
 
-The fixtures were added or extended; no test was deleted to make a rule pass.
+No test was deleted to make a rule pass.
 
-## Consumer parity (1.1.0 vs 1.2.0)
-
-The same manifest files were parsed by the published 1.1.0 wheel and by the
-1.2.0 worktree.
+## Consumer parity
 
 | Reader | Manifest | Result |
 | --- | --- | --- |
-| 1.1.0 | 1.1.0 (`quality-manifest.json` from the v1.1.0 release) | exit 0 |
-| 1.2.0 | 1.1.0 | exit 0 (the new fields are optional) |
-| 1.2.0 | 1.2.0 (with `body_hash_scope`, `artifact_repository`) | exit 0 |
-| 1.1.0 | 1.2.0 | exit 2: `manifest: unexpected key(s) artifact_repository, body_hash_scope` |
+| 1.1.0 | 1.1.0 | exit 0 |
+| 1.2.0 | 1.1.0 | exit 0 (new fields optional) |
+| 1.2.0 | 1.2.0 | exit 0 |
+| 1.1.0 | 1.2.0 | exit 2 — unexpected `artifact_repository`, `body_hash_scope` |
 
-Conclusion: compatibility is one-way. 1.2.0 reads old manifests, but a pinned
-1.1.0 consumer rejects a 1.2.0 manifest. Upgrade consumers (CBS/CBE/CBM) before
-a producer starts emitting 1.2.0 manifests. CBM and CBC need `body_hash_scope`
-anyway, so they must move to 1.2.0 before their real E2E.
+Upgrade consumers before producers emit 1.2.0 manifests.
 
 ## Waivers used
 
-None. The only blocking failure is genuine, and every warning is a true
-positive after the implementation fixes above. A waiver would have hidden a real
-finding, so no waiver file is shipped with the 1.2.0 RC.
-
-## Requested E2E: CBS `contract/v1.7.1` (expected FAIL)
-
-Ref: `contract/v1.7.1` @ `5d0b100b963c04046992bc13e4ae206d48fc92e2`
-(2026-11-09 08:10 +0800). The branch was cloned into a temporary directory;
-the CBS working repository was not modified.
-
-```bash
-git clone --branch contract/v1.7.1 /path/to/public-release .tmp-cbs-171
-python -m cbp.cli --root "<native path>/.tmp-cbs-171" --v12
-```
-
-Result: **exit 3 — the expected FAIL.**
-
-| Rule | Status | Findings |
-| --- | --- | --- |
-| CBP-WT-001 | **FAIL** | 3 |
-| CBP-BIN-001 | WARN | 1 |
-| CBP-DOC-001 | WARN | 32 |
-| other 9 rules | PASS | — |
-
-The blocking findings are committed conflict markers in a tracked file:
-
-```text
-.github/workflows/vm-proof.yml:15: conflict marker: <<<<<<< HEAD
-.github/workflows/vm-proof.yml:16: conflict marker: =======
-.github/workflows/vm-proof.yml:18: conflict marker: >>>>>>> 1493d86d082061762c1b49111b51285ad99811c1
-```
-
-This is a real defect in the contract branch, not a rule false positive. The
-RST-separator fixture (`wt_separator_only`) confirms that a bare `=======` alone
-does not fail. The fix belongs to CBS: resolve the conflict in `vm-proof.yml`
-and commit the resolved file.
-
-This E2E also found and fixed a Windows decoding bug: `git ls-files -z` can
-contain non-UTF-8 bytes, and `text=True` decoded with GBK, leaving `stdout` as
-`None`. `_git` now decodes UTF-8 with replacement and always returns a string.
-
-## External-package manifest E2E (CBC / CBM)
-
-`cbp manifest` was run against real CBC and CBM checkouts (read-only; artifacts
-built from `git archive` copies). Full detail: `docs/1.2.0/EXTERNAL_MANIFEST.md`.
-
-| Target | Manifest | Target-side validation |
-| --- | --- | --- |
-| CBC `48d9762` | `5f952d9bf82413520b87d31a41fba85f49e8242e203f83cc32e6c3d33a5cab20`, `package_id cbc`, `producer_id cbp`, `v0.1.0`, base scope | `validate_cbp` → PASS; R02–R19: 18/18 assertions (R16 skipped on Windows); R01 NOT RUN (no upload) |
-| CBM `45c49bc` | `bc5461e61a4167dfae21fdf12fe169fa8339c7f20eac09f861799d89926196c1`, `package_id cbm`, `producer_id cbp`, `v0.1.0`, base scope | `cbm_attach.reports.load_report` → PASS; B3 fields complete |
-
-Boundaries: CBC R01–R19 have their CBP input, but still need CBC's real CBE
-report and official base body. CBM B3 is field-level complete; **B2 is not
-claimed** (no real CBE report scoped to CBM).
+None. No blocking failure needed a waiver, and no warning was waived.
 
 ## Reproduction
 
 ```bash
 python -m cbp.cli --root "D:\path\to\repo" --v12 --v12-report report.json
 python -m cbp.cli --root "D:\path\to\repo" --v12 --v12-only CBP-CI-001
-python -m cbp.cli --root "D:\path\to\repo" --v12 --v12-only CBP-WT-001
+python -m cbp.cli --root "D:\path\to\repo" --mode audit --report-json gate.json \
+  --package-id cbc --producer-id cbp --version v0.1.0
+python -m cbp.cli manifest --package-id cbc --producer-id cbp --version v0.1.0 \
+  --gate-report gate.json --artifact a.whl --artifact a.tar.gz \
+  --release-body body.md --body-hash-scope base --out quality-manifest.json
 ```

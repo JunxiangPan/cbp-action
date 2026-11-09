@@ -1,5 +1,5 @@
 {
-  "manifest_sha256": "5f952d9bf82413520b87d31a41fba85f49e8242e203f83cc32e6c3d33a5cab20",
+  "manifest_sha256": "01438d31067f05508454c81af068efc61c9797034c778746b94d77e3de63bac0",
   "cases": [
     {
       "case": "R02",
@@ -148,7 +148,7 @@
       "exit_code": "SKIP",
       "gate_status": "",
       "cbc_chain_status": "",
-      "broken_link_reason": "symlink not permitted: [WinError 1314] \u5ba2\u6237\u7aef\u6ca1\u6709\u6240\u9700\u7684\u7279\u6743\u3002: 'C:\\\\Users\\\\pjx20\\\\AppData\\\\Local\\\\Temp\\\\cbc-r-case-l8cp2te_\\\\release\\\\cbc_event-0.1.0.tar.gz' -> 'C:\\\\Users\\\\pjx20\\\\AppData\\\\Local\\\\Temp\\\\cbc-r-case-l8cp2te_\\\\release\\\\cbc_event-0.1.0-py3-none-any.whl'",
+      "broken_link_reason": "symlink not permitted: [WinError 1314] \u5ba2\u6237\u7aef\u6ca1\u6709\u6240\u9700\u7684\u7279\u6743\u3002: 'C:\\\\Users\\\\pjx20\\\\AppData\\\\Local\\\\Temp\\\\cbc-r-case-bjzm7h6o\\\\release\\\\cbc_event-0.1.0.tar.gz' -> 'C:\\\\Users\\\\pjx20\\\\AppData\\\\Local\\\\Temp\\\\cbc-r-case-bjzm7h6o\\\\release\\\\cbc_event-0.1.0-py3-none-any.whl'",
       "pass": true
     },
     {

@@ -22,9 +22,9 @@ def _write(path: Path, data: bytes | str) -> Path:
 def _report(overrides: dict | None = None) -> dict:
     value = {
         "schema_version": "1",
-        "package_id": "cbp",
+        "package_id": "cbc",
         "producer_id": "cbp",
-        "version": "v0.0.0",
+        "version": "v0.1.0",
         "gate_status": "PASS",
         "applicable_gate_count": 2,
         "skip_count": 0,
@@ -201,3 +201,68 @@ def test_skipped_gate_without_reason_is_exit_two(tmp_path: Path) -> None:
             gate_report=report, artifacts=[str(artifact)], release_body=body,
             body_hash_scope="base",
         )
+
+
+def test_gate_report_package_id_must_match_the_target(tmp_path: Path) -> None:
+    report, artifact, body = _inputs(tmp_path)
+    report.write_text(json.dumps(_report({"package_id": "cbp"})), encoding="utf-8")
+    out = tmp_path / "quality-manifest.json"
+    code = cli.main([
+        "manifest", "--package-id", "cbc", "--producer-id", "cbp", "--version", "v0.1.0",
+        "--gate-report", str(report), "--artifact", str(artifact),
+        "--release-body", str(body), "--body-hash-scope", "base", "--out", str(out),
+    ])
+    assert code == 2
+    assert not out.exists()
+
+
+def test_gate_report_version_must_match_the_target(tmp_path: Path) -> None:
+    report, artifact, body = _inputs(tmp_path)
+    report.write_text(json.dumps(_report({"version": "v0.0.0"})), encoding="utf-8")
+    out = tmp_path / "quality-manifest.json"
+    code = cli.main([
+        "manifest", "--package-id", "cbc", "--producer-id", "cbp", "--version", "v0.1.0",
+        "--gate-report", str(report), "--artifact", str(artifact),
+        "--release-body", str(body), "--body-hash-scope", "base", "--out", str(out),
+    ])
+    assert code == 2
+    assert not out.exists()
+
+
+def test_manifest_gates_come_from_the_gate_report(tmp_path: Path) -> None:
+    manifest = _build(tmp_path)
+    expected = _report()["gates"]
+    assert manifest["gates"] == expected
+
+
+def _consumer_repo(root: Path) -> None:
+    (root / "README.md").write_text("clean\n", encoding="utf-8")
+    (root / "cbp.json").write_text(json.dumps({
+        "schema_version": "1.0.8",
+        "enable_encoding": True,
+        "enable_coverage": False,
+        "enable_dependency": False,
+        "enable_comments": False,
+        "enable_docs": False,
+        "enable_binary": False,
+        "enable_claims": False,
+        "enable_custom": False,
+        "enable_upgrade": False,
+    }), encoding="utf-8")
+
+
+def test_gate_report_generator_records_target_identity(tmp_path: Path) -> None:
+    _consumer_repo(tmp_path)
+    cbc_report = tmp_path / "cbc-gate.json"
+    cbm_report = tmp_path / "cbm-gate.json"
+    for package, path in (("cbc", cbc_report), ("cbm", cbm_report)):
+        code = cli.main([
+            "--root", str(tmp_path), "--mode", "audit", "--report-json", str(path),
+            "--package-id", package, "--producer-id", "cbp", "--version", "v0.1.0",
+        ])
+        assert code == 0
+    cbc = json.loads(cbc_report.read_text(encoding="utf-8"))
+    cbm = json.loads(cbm_report.read_text(encoding="utf-8"))
+    assert (cbc["package_id"], cbc["producer_id"], cbc["version"]) == ("cbc", "cbp", "v0.1.0")
+    assert (cbm["package_id"], cbm["producer_id"], cbm["version"]) == ("cbm", "cbp", "v0.1.0")
+    assert cbc_report.read_bytes() != cbm_report.read_bytes()

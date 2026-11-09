@@ -1,10 +1,10 @@
 {
   "schema_version": "1",
-  "package_id": "cbp",
+  "package_id": "cbm",
   "producer_id": "cbp",
-  "version": "v0.0.0",
-  "gate_status": "PASS",
-  "exit_code": 0,
+  "version": "v0.1.0",
+  "gate_status": "FAIL",
+  "exit_code": 3,
   "applicable_gate_count": 1,
   "skip_count": 0,
   "skip_ratio": 0.0,
@@ -24,8 +24,8 @@
     },
     {
       "name": "encoding",
-      "status": "PASS",
-      "reason": ""
+      "status": "FAIL",
+      "reason": "audit/v1.2.0-rc/b5-probe-declared.stdout.txt: invalid UTF-8: 'utf-8' codec can't decode byte 0xcb in position 35: invalid continuation byte"
     },
     {
       "name": "docs",

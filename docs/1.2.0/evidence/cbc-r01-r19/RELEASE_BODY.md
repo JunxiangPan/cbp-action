@@ -17,16 +17,16 @@ Unreleased — cbc_viewer 0.1.0
 
 ## Honesty boundary
 
-Assembled from the CBC repository at HEAD for the CBP R01-R19 feasibility run.
-No official CBC release exists; the upload status is NOT_UPLOADED.
+Assembled from CBC 11943f14 for the CBP external-manifest E2E.
+Not an official GitHub Release body; upload status is NOT_UPLOADED.
 
 <!-- CBC-EVIDENCE-BEGIN -->
-<!-- cbc-evidence {"schema":"cbc-body-anchor/v1","root_hash":"sha256:7351514c00461b205113d31f65972e4013bc6037dc4e179be872f6a5213e15df","link_count":7,"asset_link_count":0,"verified_link_count":7,"appendix_sha256":"sha256:fdfce1622b93b85fe5be8b653167511856697cd41839062cd0f2b65feb2516fd"} -->
+<!-- cbc-evidence {"schema":"cbc-body-anchor/v1","root_hash":"sha256:04010d648d5617610ec0c453fde163b8551a0fa35f6ab6e5eb974e529688f668","link_count":7,"asset_link_count":0,"verified_link_count":7,"appendix_sha256":"sha256:af123af7725a3134df7647db97ea4ad02c4f2535faa1b5d4f834fb037b1aebdb"} -->
 ## CBC evidence chain
 
 - gate_status: **NOT_UPLOADED**
 - cbc_chain_status: **PASS** (file integrity only; this is NOT a release PASS)
-- root_hash: `sha256:7351514c00461b205113d31f65972e4013bc6037dc4e179be872f6a5213e15df`
+- root_hash: `sha256:04010d648d5617610ec0c453fde163b8551a0fa35f6ab6e5eb974e529688f668`
 - link_count: 7
 - asset_link_count: 0
 - broken_link: none

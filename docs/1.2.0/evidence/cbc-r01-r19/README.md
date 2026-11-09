@@ -8,10 +8,11 @@ external-package manifest**. CBC was not modified.
 
 | Input | Provenance |
 | --- | --- |
-| CBC source | `cbc-event` HEAD `48d9762`, `git archive` copy |
+| CBC source | `cbc-event` HEAD `11943f14`, temp clone |
 | CBC artifacts | `cbc_event-0.1.0-py3-none-any.whl` / `.tar.gz`, built from that archive copy |
-| CBE report | CBE engine run on the CBC source with the minimal advisory pack in `pack.json` (package_id `cbc`, version/tag `v0.1.0`, gate PASS) |
-| CBP manifest | `cbp manifest` from the `855fed7` code, regenerated with the rebuilt artifacts; sha256 `5f952d9bf82413520b87d31a41fba85f49e8242e203f83cc32e6c3d33a5cab20` |
+| CBE report | CBE `9a1f5f28` engine run on the CBC source with the minimal advisory pack in `pack.json` (package_id `cbc`, version/tag `v0.1.0`, gate PASS) |
+| Gate report | target-scoped CBP run (`cbc`/`cbp`/`v0.1.0`), sha256 `213e824392879ce539c6664725d5cd919b7f1d471de8d91b9f75d2557279e78b` |
+| CBP manifest | `cbp manifest` with the target-scoped report; sha256 `01438d31067f05508454c81af068efc61c9797034c778746b94d77e3de63bac0` |
 | Body | assembled from the real CBC CHANGELOG; upload status is `NOT_UPLOADED` because no CBC release exists |
 | Chain | CBC `build_manifest` / `reseal`, not hand-written |
 
@@ -19,9 +20,9 @@ The CBE pack is deliberately minimal (one builtin advisory) and is disclosed her
 because no production CBE pack lists `cbc` as a package type. The CBE report is a
 real CBE execution, but its rule set is not a production CBC gate.
 
-The manifest was regenerated because the earlier evidence artifacts were no
-longer retained; both use the same `855fed7` generator. The earlier manifest
-(f897bc90…) remains in `../cbc-quality-manifest.json` as historical evidence.
+The manifests `f897bc90…` (artifacts not retained) and `5f952d9b…` (earlier
+run) are historical; the current manifest is `01438d31…`. All use the same
+external-manifest generator.
 
 ## Results
 
@@ -60,7 +61,7 @@ Full machine-readable output: `r01_r19_results.json`. Harness: `run_cases.py`.
 
 ```bash
 # from a workspace containing cbc-dist/, cbe-out/, body.md and quality-manifest.json
-python run_cases.py
+CBC_ROOT=<cbc clone> python run_cases.py
 ```
 
 The harness imports CBC's own `verify_release`, `verify_artifacts`,

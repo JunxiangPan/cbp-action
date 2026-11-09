@@ -77,10 +77,17 @@ class RuleContext:
     today: date = field(default_factory=date.today)
 
 
+def _ignored(path: Path, root: Path) -> bool:
+    return any(
+        part in SKIP_PARTS or part.startswith(".tmp-")
+        for part in path.relative_to(root).parts
+    )
+
+
 def _iter_markdown(root: Path) -> list[Path]:
     return sorted(
         path for path in root.rglob("*.md")
-        if path.is_file() and not (set(path.relative_to(root).parts) & SKIP_PARTS)
+        if path.is_file() and not _ignored(path, root)
     )
 
 
@@ -141,7 +148,7 @@ def _test_roots(root: Path) -> list[Path]:
     ignored = {"examples", "fixtures", "vendor", "third_party", "node_modules", "tests-fixtures"}
     roots = []
     for candidate in root.rglob("tests"):
-        if not candidate.is_dir() or set(candidate.relative_to(root).parts) & SKIP_PARTS:
+        if not candidate.is_dir() or _ignored(candidate, root):
             continue
         parts = candidate.relative_to(root).parts
         if set(parts) & ignored:
@@ -373,7 +380,7 @@ def rule_bin_001(ctx: RuleContext) -> list[str]:
     """CBP-BIN-001: installer executables carry an Authenticode blob."""
     findings = []
     for path in sorted(ctx.root.rglob("*.exe")):
-        if set(path.relative_to(ctx.root).parts) & SKIP_PARTS:
+        if _ignored(path, ctx.root):
             continue
         if "install" not in path.name.lower():
             continue
@@ -424,7 +431,11 @@ def _doc_reference_exists(root: Path, reference: str) -> bool:
     if (root / reference).exists():
         return True
     # A path quoted relative to a subdirectory still resolves by suffix.
-    return any(path.is_file() and path.as_posix().endswith("/" + reference) for path in root.rglob(reference.rsplit("/", 1)[-1]))
+    return any(
+        path.is_file() and not _ignored(path, root)
+        and path.as_posix().endswith("/" + reference)
+        for path in root.rglob(reference.rsplit("/", 1)[-1])
+    )
 
 
 def rule_doc_001(ctx: RuleContext) -> list[str]:
@@ -531,7 +542,7 @@ def rule_slop_001(ctx: RuleContext) -> list[str]:
     threshold = 3
     occurrences: list[str] = []
     for path in sorted(ctx.root.rglob("*.py")):
-        if set(path.relative_to(ctx.root).parts) & SKIP_PARTS:
+        if _ignored(path, ctx.root):
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))

@@ -16,7 +16,7 @@ import tempfile
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent
-CBC_ROOT = (BASE / ".." / ".." / "cbc-event").resolve()
+CBC_ROOT = Path(__import__("os").environ.get("CBC_ROOT", str(BASE / ".." / ".." / "cbc-event"))).resolve()
 sys.path.insert(0, str(CBC_ROOT))
 
 from cbc_viewer.chain import GENESIS, parse_manifest, verify_artifacts  # noqa: E402

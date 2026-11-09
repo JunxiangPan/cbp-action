@@ -70,6 +70,19 @@ def load_gate_report(path: Path) -> dict[str, Any]:
         raise ManifestError(f"gate report unreadable: {path}: {exc}") from exc
     if not isinstance(data, dict):
         raise ManifestError("gate report must be a JSON object")
+    package_id = data.get("package_id")
+    producer_id = data.get("producer_id")
+    version = data.get("version")
+    if not isinstance(package_id, str) or not package_id.strip():
+        raise ManifestError("gate report is missing package_id")
+    if not isinstance(producer_id, str) or not producer_id.strip():
+        raise ManifestError("gate report is missing producer_id")
+    if not isinstance(version, str) or not version.strip():
+        raise ManifestError("gate report is missing version")
+    try:
+        report_version = normalize_version(version)
+    except ManifestError as exc:
+        raise ManifestError(f"gate report version is invalid: {version!r}") from exc
     gates = data.get("gates")
     if not isinstance(gates, list) or not gates:
         raise ManifestError("gate report must contain a non-empty gates array")
@@ -108,6 +121,9 @@ def load_gate_report(path: Path) -> dict[str, Any]:
     if not isinstance(blocking, bool):
         raise ManifestError("blocking_skip must be a boolean")
     return {
+        "package_id": package_id.strip(),
+        "producer_id": producer_id.strip(),
+        "version": report_version,
         "gate_status": status,
         "applicable_gate_count": applicable,
         "skip_count": skip_count,
@@ -165,6 +181,18 @@ def build_manifest(
         )
     normalized_version = normalize_version(version)
     report = load_gate_report(gate_report)
+    if report["package_id"] != package_id:
+        raise ManifestError(
+            f"gate report package_id mismatch: {report['package_id']!r} != {package_id!r}"
+        )
+    if report["producer_id"] != producer_id:
+        raise ManifestError(
+            f"gate report producer_id mismatch: {report['producer_id']!r} != {producer_id!r}"
+        )
+    if report["version"] != normalized_version:
+        raise ManifestError(
+            f"gate report version mismatch: {report['version']!r} != {normalized_version!r}"
+        )
     if not release_body.is_file():
         raise ManifestError(f"release body missing: {release_body}")
     body_data = release_body.read_bytes()

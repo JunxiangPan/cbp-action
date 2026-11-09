@@ -1,8 +1,8 @@
 {
   "schema_version": "1",
-  "package_id": "cbp",
+  "package_id": "cbc",
   "producer_id": "cbp",
-  "version": "v0.0.0",
+  "version": "v0.1.0",
   "gate_status": "PASS",
   "exit_code": 0,
   "applicable_gate_count": 1,
