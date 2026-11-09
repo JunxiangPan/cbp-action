@@ -1,17 +1,17 @@
 # CBP 1.2.0 — self-audit (release-path fix)
 
-Status: **PASS for re-audit, no publish**. Code candidate `d3ec73e`, branch
+Status: **PASS for re-audit, no publish**. Code candidate `8431712`, branch
 `1.2.0-dev`, PR #1 open. Each item cites the command, file or hash used.
 
 ## [1] Candidate identity / repository state — PASS
 
 | Check | Evidence |
 | --- | --- |
-| Code candidate | `git rev-parse HEAD` → `d3ec73e` |
+| Code candidate | `git rev-parse HEAD` → `8431712` |
 | Branch | `1.2.0-dev` |
-| PR #1 | `gh pr view 1` → `OPEN`, head `d3ec73e` |
-| CI | run `42599359187` — success |
-| Action E2E | run `42599359071` — success |
+| PR #1 | `gh pr view 1` → `OPEN`, head `8431712` |
+| CI | run `42601015605` — success |
+| Action E2E | run `42601015694` — success |
 | v1.2.0 tag | `git ls-remote --tags origin refs/tags/v1.2.0` → empty |
 | PyPI 1.2.0 | `https://pypi.org/pypi/cbp-action/1.2.0/json` → **404** |
 | GitHub Release | `gh release view v1.2.0` → not found |
@@ -23,18 +23,18 @@ Status: **PASS for re-audit, no publish**. Code candidate `d3ec73e`, branch
 - Coverage: `python -m coverage run --branch --source=src/cbp,tools -m pytest -q tests`
   then `python -m coverage json` → `security_core=91.64%/90.00%`,
   `cbp=90.56%/80.00%`.
-- CI run `42599359187`: all jobs success. E2E `42599359071`: success
+- CI run `42601015605`: all jobs success. E2E `42601015694`: success
   (15/15 payload + consumer parity).
 
 ## [3] Build artifacts / attestation — PASS
 
 | Artifact | SHA256 |
 | --- | --- |
-| wheel | `dafc9662eba03d2e2002f91a14708aa0384eeaf1d45926f72f8104c9196407d6` |
-| sdist | `e58524e7edee996d1e41f3281f0ff6e4be0fea0d078c862b0aa5861b21059418` |
-| `RC_ASSETS.sha256` | `8a28b2873d5b2d462929d57c909fdac57567d14b1d7b6835706178e1707d9358` |
+| wheel | `9807d02c8b43f002381e8996d943c3b8077fe87ebab8b4530f42ff349f795530` |
+| sdist | `7da76e1615f0680fa2bf8c0ad979a643b4971808e5b0b7ce4875d436fb35293a` |
+| `RC_ASSETS.sha256` | `4b2162c4c6aea24250d6e9af07fd85eb27e6420ba60e5ad21d8d9137469c3a1d` |
 
-- Source: RC run `42599351558`, artifact `cbp-rc`.
+- Source: RC run `42601010528`, artifact `cbp-rc`.
 - `gh attestation verify <wheel>` → exit 0; `gh attestation verify <sdist>` →
   exit 0; subject digests equal the table.
 - Local `dist/` is **not** the audit artifact: wheel
@@ -95,22 +95,30 @@ since the CBC/CBM validation; the release-path fix does not touch it.
   `e2e_run_id`, `expected_wheel_sha256`, `expected_sdist_sha256`.
 - `publish` downloads `gh run download "$RC_RUN_ID" -n cbp-rc -D rc` and
   `quality-manifest-$CI_RUN_ID`; it does **not** download or publish `cbp-dist`.
-- It checks wheel `dafc9662…` and sdist `e58524e7…` against the expected inputs,
+- It checks wheel `9807d02c…` and sdist `7da76e16…` against the expected inputs,
   checks `rc/RC_ASSETS.sha256`, verifies both RC attestations, and uses
   `rc/*.whl` / `rc/*.tar.gz` in `gh release create`.
 - `tools/release_preflight.py` runs the same checks without creating a Release:
   correct inputs → 0 / `PREFLIGHT_OK`; wrong wheel or sdist hash → 3; tag/RC/CI
   commit mismatch → 3.
 - Tests: `test_release_preflight.py` (4), `test_release_workflow.py` (4).
+- Actual read-only preflight on 2026-11-09 (exit 0):
+
+```text
+PREFLIGHT_OK tag=v1.2.0 ci_run=42601015605 rc_run=42601010528 commit=8431712 wheel=9807d02c8b43f002381e8996d943c3b8077fe87ebab8b4530f42ff349f795530 sdist=7da76e1615f0680fa2bf8c0ad979a643b4971808e5b0b7ce4875d436fb35293a
+```
+
+Raw: `docs/1.2.0/evidence/preflight.txt`.
 
 ## [9] Tag / merge / run consistency — PASS
 
 - The Fast-forward path is documented and is the only supported path for this
-  RC: `merge --ff-only 1.2.0-dev`, tag `v1.2.0` at `d3ec73e`; then
-  `tag_commit == rc_run.head_sha == ci_run.head_sha == d3ec73e`.
+  RC: `merge --ff-only 1.2.0-dev`, tag `v1.2.0` at `8431712`; then
+  `tag_commit == rc_run.head_sha == ci_run.head_sha == 8431712`; the actual
+  preflight above printed `commit=8431712`.
 - `release.yml` and the preflight reject any disagreement with exit 3.
 - The runbook explicitly forbids tagging a GitHub merge commit and reusing RC
-  run `42599351558`; a merge commit would require new CI, new RC, new
+  run `42601010528`; a merge commit would require new CI, new RC, new
   attestation, and a new audit.
 
 ## Verdict

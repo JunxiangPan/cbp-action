@@ -8,24 +8,23 @@ GitHub Release. Merging the draft PR, tagging, and publishing are owner actions.
 | Item | Value |
 | --- | --- |
 | Branch | `1.2.0-dev` |
-| RC commit | `d3ec73e` (release path publishes the audited cbp-rc) |
+| RC commit | `8431712` (preflight accepts abbreviated --tag-commit) |
 | Draft PR | https://github.com/JunxiangPan/cbp-action/pull/1 |
-| PR CI | run `42599359187` — success |
-| Action E2E | run `42599359071` — success (15/15 payload + consumer parity) |
-| RC build + attest | run `42599351558` — success |
-| wheel | `cbp_action-1.2.0-py3-none-any.whl`<br>`dafc9662eba03d2e2002f91a14708aa0384eeaf1d45926f72f8104c9196407d6` |
-| sdist | `cbp_action-1.2.0.tar.gz`<br>`e58524e7edee996d1e41f3281f0ff6e4be0fea0d078c862b0aa5861b21059418` |
+| PR CI | run `42601015605` — success |
+| Action E2E | run `42601015694` — success (15/15 payload + consumer parity) |
+| RC build + attest | run `42601010528` — success |
+| wheel | `cbp_action-1.2.0-py3-none-any.whl`<br>`9807d02c8b43f002381e8996d943c3b8077fe87ebab8b4530f42ff349f795530` |
+| sdist | `cbp_action-1.2.0.tar.gz`<br>`7da76e1615f0680fa2bf8c0ad979a643b4971808e5b0b7ce4875d436fb35293a` |
 | Attestation | `gh attestation verify` exit 0 for both; subject digest equals the local hash; repository `JunxiangPan/cbp-action` |
 | PyPI | `https://pypi.org/pypi/cbp-action/1.2.0/json` → **404** |
 | GitHub Release | `v1.2.0` → **not found** |
 
 Post-RC history: `9ee52fb` added conflict markers to CBP-WT-001, `bb8d4d6`
 fixed temp-file hygiene, `855fed7` added the external-package manifest
-generator, `72252b4` fixed target-scoped gate provenance, and `d3ec73e` fixes
-the release path: `release.yml` publishes the audited `cbp-rc` bundle, not
-`cbp-dist`, and verifies expected hashes plus tag/RC/CI commit equality. Earlier
-candidates `5da8b87`, `9ee52fb`, `bb8d4d6`, `855fed7` and `72252b4` are
-superseded.
+generator, `72252b4` fixed target-scoped gate provenance, and `8431712` fixes
+the release path and preflight short-SHA handling: `release.yml` publishes the audited `cbp-rc` bundle, not
+`cbp-dist`, and verifies expected hashes plus tag/RC/CI commit equality. Earlier candidates `5da8b87`, `9ee52fb`, `bb8d4d6`, `855fed7`, `72252b4` and
+`d3ec73e` are superseded.
 
 The RC workflow builds and attests only; it never uploads to a package index or
 creates a release (`attest-build-provenance` + artifact upload).
@@ -120,17 +119,21 @@ for their real E2E, so they must move to 1.2.0 before the train can pass.
    in 1.2.0; 1.2.1 needs an accepted baseline with expiry before they block.
 4. **RC rebuild policy** — the RC workflow ignores docs-only pushes
    (`paths-ignore: docs/**, *.md`). Code commits still rebuild and require
-   re-attestation. The candidate for this audit is `d3ec73e` / run
-   `42599351558`; earlier candidates are superseded.
+   re-attestation. The candidate for this audit is `8431712` / run
+   `42601010528`; earlier candidates are superseded.
 
 ## Reproduction
 
 ```bash
 python -m pytest -q tests
 python -m cbp.cli --root . --v12 --v12-report v12-report.json
-gh run view 42599351558 --repo JunxiangPan/cbp-action
+gh run view 42601010528 --repo JunxiangPan/cbp-action
 gh attestation verify cbp_action-1.2.0-py3-none-any.whl --repo JunxiangPan/cbp-action
 ```
+
+Preflight (read-only): `PREFLIGHT_OK tag=v1.2.0 ci_run=42601015605
+rc_run=42601010528 commit=8431712` — raw output in
+`docs/1.2.0/evidence/preflight.txt`.
 
 Self-audit: `docs/1.2.0/SELF_AUDIT.md`. Release steps that must not be executed
 without approval: `docs/1.2.0/RELEASE_RUNBOOK.md`.
