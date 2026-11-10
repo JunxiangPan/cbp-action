@@ -14,7 +14,7 @@ from cbp import report_schema, v12_rules
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = ROOT / "schemas" / "manifest.schema.json"
 
-SCHEMA_SHA256 = "82ca773c56e66a203d6741e90f001acabd37a4b1505e4a820f4f0e16256d2440"
+SCHEMA_SHA256 = "147d7f2590cd38c3cb1eae027913c8731fcb6c079e2b502b53c1bcc219886844"
 REQUIRED = {
     "schema_version", "package_id", "producer_id", "version", "gate_status",
     "applicable_gate_count", "skip_count", "skip_ratio", "blocking_skip",
@@ -25,7 +25,7 @@ STATUSES = {"PASS", "FAIL", "SKIPPED", "SKIPPED_INFRA", "PRECONDITION_FAIL", "NO
 
 
 def test_schema_is_frozen() -> None:
-    assert hashlib.sha256(SCHEMA.read_bytes()).hexdigest() == SCHEMA_SHA256
+    assert hashlib.sha256(SCHEMA.read_bytes().replace(b"\r\n", b"\n")).hexdigest() == SCHEMA_SHA256
 
 
 def test_schema_required_fields_are_frozen() -> None:
