@@ -59,6 +59,10 @@ def write(manifest_path: Path, artifacts: list[Path], output_dir: Path, signed: 
     (output_dir / "provenance.json").write_text(
         json.dumps(statement, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
+    (output_dir / "predicate.json").write_text(
+        json.dumps(statement["predicate"], ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     (output_dir / "provenance.sig").write_text(
         json.dumps({"status": statement["signature_status"], "algorithm": "cosign-keyless" if signed else None, "signature": None}, indent=2) + "\n",
         encoding="utf-8",

@@ -270,8 +270,8 @@ jobs:
               --output-certificate "signatures/$name.pem" \
               "$file"
           done
-          cosign attest-blob --yes --predicate provenance/provenance.json --type slsaprovenance1 --bundle signatures/attestation.json rc/*.whl
-          cosign attest-blob --yes --predicate provenance/provenance.json --type slsaprovenance1 --bundle signatures/attestation-sdist.json rc/*.tar.gz
+          cosign attest-blob --yes --predicate provenance/predicate.json --type slsaprovenance1 --bundle signatures/attestation.json rc/*.whl
+          cosign attest-blob --yes --predicate provenance/predicate.json --type slsaprovenance1 --bundle signatures/attestation-sdist.json rc/*.tar.gz
       - name: Verify keyless signatures and attestations
         env:
           RELEASE_TAG: ${{ inputs.release_tag }}
@@ -303,7 +303,7 @@ jobs:
       - name: Generate release asset manifest from the RC bundle
         run: |
           cd rc
-          sha256sum *.whl *.tar.gz ../artifact/quality-manifest.json ../artifact/quality-manifest.json.sha256 ../artifact/docs/RELEASE_NOTES.generated.md ../provenance/provenance.json ../signatures/* | awk '{n=$2; sub(/.*\//,"",n); print $1 " *" n}' > RELEASE_ASSETS.sha256
+          sha256sum *.whl *.tar.gz ../artifact/quality-manifest.json ../artifact/quality-manifest.json.sha256 ../artifact/docs/RELEASE_NOTES.generated.md ../provenance/provenance.json ../provenance/predicate.json ../signatures/* | awk '{n=$2; sub(/.*\//,"",n); print $1 " *" n}' > RELEASE_ASSETS.sha256
       - name: Expose the release asset manifest to the AI gate
         run: |
           mkdir -p dist
@@ -328,7 +328,7 @@ jobs:
         run: |
           case "$RELEASE_TAG" in (v[0-9]*.[0-9]*.[0-9]*) ;; (*) echo "invalid release_tag" >&2; exit 2;; esac
           test -f artifact/docs/RELEASE_NOTES.generated.md
-          gh release create "$RELEASE_TAG" rc/*.whl rc/*.tar.gz rc/RELEASE_ASSETS.sha256 artifact/quality-manifest.json artifact/quality-manifest.json.sha256 artifact/docs/RELEASE_NOTES.generated.md provenance/provenance.json signatures/* --notes-file rc/RELEASE_BODY.md
+          gh release create "$RELEASE_TAG" rc/*.whl rc/*.tar.gz rc/RELEASE_ASSETS.sha256 artifact/quality-manifest.json artifact/quality-manifest.json.sha256 artifact/docs/RELEASE_NOTES.generated.md provenance/provenance.json provenance/predicate.json signatures/* --notes-file rc/RELEASE_BODY.md
       - name: Verify published release body and asset inventory
         env:
           GH_TOKEN: ${{ github.token }}
