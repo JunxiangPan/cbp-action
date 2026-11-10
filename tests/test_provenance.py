@@ -60,3 +60,26 @@ def test_cli_unsigned_exits_4(tmp_path: Path, capsys) -> None:
         argv += ["--artifact", str(artifact)]
     assert cli.main(argv) == 4
     assert "BLOCKED_NO_SIGNING_IDENTITY" in capsys.readouterr().out
+
+
+def test_signed_verifier_requires_and_validates_bundles(tmp_path: Path, monkeypatch) -> None:
+    bundle_dir = tmp_path / "signatures"
+    bundle_dir.mkdir()
+    wheel = tmp_path / "a.whl"; wheel.write_bytes(b"a")
+    sdist = tmp_path / "a.tar.gz"; sdist.write_bytes(b"b")
+    manifest = tmp_path / "quality-manifest.json"
+    manifest.write_text(json.dumps({"artifact_hashes": {wheel.name: provenance._sha(wheel), sdist.name: provenance._sha(sdist)}}), encoding="utf-8")
+    out = tmp_path / "provenance"
+    provenance.write(manifest, [wheel, sdist], out, repository="JunxiangPan/cbp-action",
+                     run_id="1", tag="v1.3.2", commit="a" * 40,
+                     generated_at="2026-11-11T00:00:00Z", signed=True)
+    prov = out / "provenance.json"
+    for path in (prov, manifest, wheel, sdist):
+        (bundle_dir / (path.name + ".bundle")).write_text("fake bundle", encoding="utf-8")
+    monkeypatch.setattr(provenance, "cosign_verify", lambda *args: (True, ""))
+    result = provenance.verify(prov, manifest, [wheel, sdist], bundle_dir=bundle_dir,
+                               identity_regexp="https://github.com/x/y/.github/workflows/release.yml@refs/tags/v1.3.2")
+    assert result["status"] == "SIGNED"
+    monkeypatch.setattr(provenance, "cosign_verify", lambda *args: (False, "bad signature"))
+    assert provenance.verify(prov, manifest, [wheel, sdist], bundle_dir=bundle_dir,
+                             identity_regexp="x")["status"] == "FAIL"

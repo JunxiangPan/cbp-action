@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.3.2 — 2026-11-11
+
+- GitHub OIDC keyless signing with cosign/sigstore (no long-lived private key).
+- Release assets include `.bundle`, `.sig` and `.pem` for the wheel, sdist,
+  quality manifest and provenance; wheel/sdist attestations are attached.
+- The keyless workflow verifies every signature with
+  `--certificate-identity` and
+  `--certificate-oidc-issuer https://token.actions.githubusercontent.com`
+  before publishing; the provenance verifier also requires the cosign bundle.
+- Release notes state **SIGNED via GitHub OIDC keyless**; unsigned is no longer
+  claimed for 1.3.2. If OIDC is unavailable the workflow stops and no Release
+  or PyPI upload occurs.
+- No gate semantics, frozen schema, 20% skip threshold or body-hash rules are
+  changed. v1.3.1 remains unsigned and is not re-signed or moved.
+
 ## 1.3.1 — 2026-11-11
 
 - Adds the real `cbp-gate` job to `cbp-ci` (job name exactly `cbp-gate`):
