@@ -5,7 +5,7 @@
 - CBP-MUT-01: mutation harness (`tests/mutation/`) with 12 known mutants across
   coverage/allowlist, dependency lock, docs, binary provenance, claims, body
   binding and artifacts; 12/12 detected (100% recall).
-- CBP-ATK-01: 51-entry hostile corpus covering action inputs, checkout refs,
+- CBP-ATK-01: 50-entry hostile corpus covering action inputs, checkout refs,
   permissions, artifact names, tar slip, CRLF/Unicode, case/backslash and JSON.
 - CBP-TRUST-01: opt-in SLSA-shaped provenance sidecar + offline verifier.
   Signing is **BLOCKED_NO_SIGNING_IDENTITY**; no signature is fabricated.

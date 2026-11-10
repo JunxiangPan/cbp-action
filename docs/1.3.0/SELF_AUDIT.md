@@ -14,7 +14,7 @@ PR: https://github.com/JunxiangPan/cbp-action/pull/2
 |---|---|
 | Tests | **525 passed**, CI run `42807482183` (ubuntu + windows) success |
 | Mutation | **12/12 detected, recall 100%** (`docs/1.3.0/MUTATION_REPORT.md`) |
-| Hostile corpus | **51/51 rejected** (`docs/1.3.0/HOSTILE_CORPUS.md`) |
+| Hostile corpus | **50/50 rejected** (`docs/1.3.0/HOSTILE_CORPUS.md`) |
 | Contract frozen | 6 tests green: schema SHA, required fields, exit codes, status enum, skip 20%, CBP-BODY-001 |
 | Gate self-protection | `quality/GATES.sha256` verifies; tamper tests for coverage/claims/workflow all detected |
 | Provenance | schema + offline verifier; **BLOCKED_NO_SIGNING_IDENTITY** (no signature fabricated) |

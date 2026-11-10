@@ -1,6 +1,6 @@
 # CBP 1.3.0 — hostile input corpus
 
-`tests/hostile/corpus.json` contains **51** entries. Every entry has
+`tests/hostile/corpus.json` contains **50** entries. Every entry has
 `"expect": "FAIL"`; `tests/test_hostile_corpus.py` runs all of them.
 
 | Category | Cases | What is rejected |
@@ -15,5 +15,5 @@
 | invalid_json | 6 | duplicate keys, truncated JSON, trailing garbage, NaN, NUL in strings |
 | misc | 3 | bidi, backslash path, overlong artifact name |
 
-Result: **51/51 rejected**, 0 accepted. This is a parser/validator corpus, not a
+Result: **50/50 rejected**, 0 accepted. This is a parser/validator corpus, not a
 claim that CBP stops a malicious runner or a compromised maintainer.
