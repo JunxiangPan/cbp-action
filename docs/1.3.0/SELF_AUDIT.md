@@ -5,20 +5,20 @@ move of any old tag was performed.
 
 ## Candidate
 
-The candidate is the HEAD of `1.3.0-dev` after this commit; the final commit
-hash is recorded in the release PR and the hand-off report.
+Code candidate: `32d00cb87d1e7269175a2d9014241fb211d68411` (`1.3.0-dev`).
+PR: https://github.com/JunxiangPan/cbp-action/pull/2
 
 ## Acceptance results
 
 | Item | Result |
 |---|---|
-| Tests | **525 passed**, 43 warnings |
+| Tests | **525 passed**, CI run `42807482183` (ubuntu + windows) success |
 | Mutation | **12/12 detected, recall 100%** (`docs/1.3.0/MUTATION_REPORT.md`) |
 | Hostile corpus | **51/51 rejected** (`docs/1.3.0/HOSTILE_CORPUS.md`) |
-| Contract frozen | 6 tests: schema SHA, required fields, exit codes, status enum, skip 20%, CBP-BODY-001 |
+| Contract frozen | 6 tests green: schema SHA, required fields, exit codes, status enum, skip 20%, CBP-BODY-001 |
 | Gate self-protection | `quality/GATES.sha256` verifies; tamper tests for coverage/claims/workflow all detected |
 | Provenance | schema + offline verifier; **BLOCKED_NO_SIGNING_IDENTITY** (no signature fabricated) |
-| Windows | local Windows semantics tests pass; **Windows CI result is reported from the PR** |
+| Windows | **green**: windows-latest py3.10 + py3.12, CI run `42807482183` |
 | AI audit | shadow mode, precision 83.3%, recall 83.3%, not blocking |
 | SBOM | CycloneDX, 8 components, full-SHA actions |
 | Old behavior | v1.2.2 manifest/schema/exit semantics unchanged; v1.2.0/v1.2.1/v1.2.2 tags and assets untouched |
