@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.3.1 — 2026-11-11
+
+- Adds the real `cbp-gate` job to `cbp-ci` (job name exactly `cbp-gate`):
+  runs `python -m cbp.cli --root . --v12` (13 production rules) and verifies
+  `quality/GATES.sha256`. It is not in e2e-payload and has no
+  continue-on-error.
+- No change to the frozen quality-manifest shape, exit codes, 20% skip
+  threshold, body-hash semantics, or CBP-BODY-001.
+- Release remains **UNSIGNED / BLOCKED_NO_SIGNING_IDENTITY**; no signature is
+  fabricated and release text must not claim signed provenance.
+- v1.3.0 tag/Release remain in place but are not the CBE cross-review basis;
+  v1.3.1 is the release containing the real gate job.
+
 ## 1.3.0 — 2026-11-10
 
 - CBP-MUT-01: mutation harness (`tests/mutation/`) with 12 known mutants across
