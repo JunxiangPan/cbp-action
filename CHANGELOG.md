@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.3.0 — 2026-11-10
+
+- CBP-MUT-01: mutation harness (`tests/mutation/`) with 12 known mutants across
+  coverage/allowlist, dependency lock, docs, binary provenance, claims, body
+  binding and artifacts; 12/12 detected (100% recall).
+- CBP-ATK-01: 51-entry hostile corpus covering action inputs, checkout refs,
+  permissions, artifact names, tar slip, CRLF/Unicode, case/backslash and JSON.
+- CBP-TRUST-01: opt-in SLSA-shaped provenance sidecar + offline verifier.
+  Signing is **BLOCKED_NO_SIGNING_IDENTITY**; no signature is fabricated.
+- CBP-SELF-01: `quality/GATES.sha256` protects gate scripts and workflows;
+  CI/release verify it; tamper tests turn red.
+- CBP-CONTRACT-01: frozen schema/exit/status/body/skip-ratio tests.
+- CBP-DEP-01: lock integrity sidecars, tag-move detection, full-SHA action pins.
+- CBP-WIN-01: Windows path/CRLF/reserved-name/short-name tests.
+- CBP-AI-01: shadow-mode backtest, precision/recall reported, never blocking.
+- CBP-THREAT-01: threat model and CBE/CBS boundary.
+- CBP-SBOM-01: CycloneDX generator for CBP itself.
+- No frozen quality-manifest fields were added; new artifacts are sidecars and
+  opt-in tools. Old v1.2.x tags and assets are untouched.
+
 ## 1.2.2 — 2026-11-09
 
 CBP follows CONTRACT v1.7.1 RC2 (`contract/v1.7.1` at `6835789`, NOT FROZEN).

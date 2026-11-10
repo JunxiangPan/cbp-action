@@ -28,6 +28,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Verify quality gate manifest
+        run: python tools/verify_gate_manifest.py quality/GATES.sha256
       - name: Reject tracked build artifacts
         run: |
           tracked=$(git ls-files 'dist/*' '*.whl' '*.tar.gz')
