@@ -72,6 +72,14 @@ sha256: {digest}
 
 https://pypi.org/project/cbp-action/{version}/
 
+## Provenance
+
+**UNSIGNED — BLOCKED_NO_SIGNING_IDENTITY.**
+
+- `provenance.json` and `provenance.sig` are sidecars; no cryptographic signature exists.
+- The offline verifier exits 4 for this release.
+- Do not describe these artifacts as signed, sigstore-verified, or SLSA-verified.
+
 ## Section A: Security regression (blocking)
 
 - main CI: {evidence(args.ci_run)}
