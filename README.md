@@ -514,6 +514,13 @@ the artifact-integrity check with exit 2 and the message
 a comment if you want the readable version. `usage.yml`, `docs/` and `examples/`
 are documentation and are not scanned.
 
+## Quality / AI evidence gates (1.5.0, opt-in)
+
+CBP 1.5.0 adds opt-in `--target-mutation`, `--test-quality` and
+`--ai-evidence` gates. They are independent of CBE, do not change the default
+1.4.0 behavior, and never modify the frozen quality manifest. See
+`docs/1.5.0/QUALITY_GATES.md`.
+
 ## Strict profile (1.4.0, opt-in)
 
 `--profile strict` requires signed provenance (cosign/OIDC), the gate manifest,
