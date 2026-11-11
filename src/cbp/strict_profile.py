@@ -7,6 +7,7 @@ modifies the frozen quality-manifest.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import random
 import re
@@ -17,7 +18,6 @@ from typing import Any
 
 from . import artifact_integrity, dependency_gate, hostile_input, provenance
 from .config import GateConfig
-from tools import tag_immutability, verify_gate_manifest
 
 
 @dataclass
@@ -37,6 +37,32 @@ class StrictOptions:
     lockfile: Path = Path("requirements-test.lock")
     installer: Path = Path("install-test.sh")
     report: Path = Path("strict-profile.json")
+
+
+def _gate_manifest_problems(manifest: Path, root: Path) -> list[str]:
+    problems: list[str] = []
+    for line in manifest.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        expected, _, relative = line.partition(" ")
+        relative = relative.strip()
+        path = root / relative
+        if not path.is_file():
+            problems.append(f"{relative}: missing")
+        elif hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest() != expected:
+            problems.append(f"{relative}: hash mismatch")
+    return problems
+
+
+def _tag_diff(expected: dict[str, str], actual: dict[str, str]) -> list[str]:
+    problems: list[str] = []
+    for tag, commit in sorted(expected.items()):
+        if tag not in actual:
+            problems.append(f"{tag}: missing")
+        elif actual[tag] != commit:
+            problems.append(f"{tag}: moved {commit} -> {actual[tag]}")
+    return problems
 
 
 def _fuzz_problem() -> str:
@@ -75,7 +101,7 @@ def run(options: StrictOptions) -> int:
 
     # 1. Gate script/workflow self-protection
     try:
-        problems = verify_gate_manifest.verify(root / options.gate_manifest, root)
+        problems = _gate_manifest_problems(root / options.gate_manifest, root)
         add("gates_sha256", not problems, "; ".join(problems) or "verified")
     except (OSError, ValueError) as exc:
         add("gates_sha256", False, str(exc))
@@ -122,7 +148,7 @@ def run(options: StrictOptions) -> int:
         if not expected:
             raise ValueError("expected tag map is empty")
         actual = _actual_tags(root, sorted(expected))
-        moved = tag_immutability.diff(expected, actual)
+        moved = _tag_diff(expected, actual)
         add("tag_immutability", not moved, "; ".join(moved) or f"tags={len(expected)}")
     except (OSError, ValueError) as exc:
         add("tag_immutability", False, f"expected map unreadable: {exc}")

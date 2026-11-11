@@ -41,10 +41,10 @@ def _options(root: Path) -> strict_profile.StrictOptions:
 
 
 def _mock_all(monkeypatch, status: str = "SIGNED") -> None:
-    monkeypatch.setattr(strict_profile.verify_gate_manifest, "verify", lambda *args: [])
+    monkeypatch.setattr(strict_profile, "_gate_manifest_problems", lambda *args: [])
     monkeypatch.setattr(strict_profile.artifact_integrity, "action_pin_findings", lambda *args: [])
     monkeypatch.setattr(strict_profile.dependency_gate, "run", lambda *args: (True, "locked"))
-    monkeypatch.setattr(strict_profile.tag_immutability, "diff", lambda *args: [])
+    monkeypatch.setattr(strict_profile, "_tag_diff", lambda *args: [])
     monkeypatch.setattr(strict_profile, "_actual_tags", lambda root, tags: {"v1.0.0": "a" * 40})
     monkeypatch.setattr(strict_profile.provenance, "verify", lambda *args, **kwargs: {"status": status, "problems": []})
 
