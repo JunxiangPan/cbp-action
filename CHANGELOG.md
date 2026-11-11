@@ -1,6 +1,19 @@
 # Changelog
 
-## 1.5.0 — 2026-11-11 (development)
+## 1.5.1 — 2026-11-12
+
+- Manifest/report version validation accepts PEP 440 prereleases such as
+  `0.1.0rc1`; prereleases are preserved, not renamed to a stable version.
+- Adds the opt-in `--semantic-claims` gate: program validation always runs
+  first; local/cloud are mutually exclusive; cloud requires explicit consent
+  and receives redacted content only; no evidence is REVIEW/FAIL, subjective
+  claims are ADVISORY.
+- Includes a CBF 0.1.0rc1 subject manifest generated without modifying CBF
+  artifacts.
+- Default CBP 1.5.0 behavior, frozen schema, exit codes, 20% skip and
+  CBP-BODY-001 are unchanged.
+
+## 1.5.0 — 2026-11-11
 
 - Adds opt-in `--target-mutation`: configurable command/report/threshold,
   report SHA256, changed-code score; strict profile fails exit 3.
