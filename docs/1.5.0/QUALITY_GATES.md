@@ -53,7 +53,7 @@ Claim/evidence JSON:
 - Every evidence entry needs an existing file, valid line, non-empty command
   and matching file SHA256.
 - Claimed `coverage` / `mutation_score` contradicting the supplied reports FAIL.
-- No evidence is **ADVISORY**; subjective conclusions are **HUMAN_REVIEW**;
+- No evidence and subjective conclusions are **ADVISORY**;
   forged/contradictory evidence is **FAIL** (exit 3).
 
 ## Independence

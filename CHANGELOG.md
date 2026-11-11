@@ -8,7 +8,7 @@
   deleted tests; Python AST + generic language adapter.
 - Adds opt-in `--ai-evidence`: JSON claims with file/line/command/hash checks;
   contradictions with coverage/mutation FAIL; no evidence is ADVISORY;
-  subjective claims are HUMAN_REVIEW.
+  subjective claims are ADVISORY.
 - CBP remains independent of CBE (no import, no install requirement).
 - Default CBP 1.4.0 behavior, frozen schema, exit codes, 20% skip and
   CBP-BODY-001 are unchanged.

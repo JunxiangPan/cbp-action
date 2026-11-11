@@ -51,12 +51,12 @@ def test_no_evidence_is_advisory(tmp_path: Path) -> None:
     assert ai_evidence.run(_options(tmp_path, claims))["status"] == "ADVISORY"
 
 
-def test_subjective_goes_to_human_review(tmp_path: Path) -> None:
+def test_subjective_is_advisory(tmp_path: Path) -> None:
     claims, _ = _fixture(tmp_path)
     data = json.loads(claims.read_text(encoding="utf-8"))
     data["claims"][0]["subjective"] = True
     claims.write_text(json.dumps(data), encoding="utf-8")
-    assert ai_evidence.run(_options(tmp_path, claims))["status"] == "HUMAN_REVIEW"
+    assert ai_evidence.run(_options(tmp_path, claims))["status"] == "ADVISORY"
 
 
 def test_bad_hash_fails(tmp_path: Path) -> None:

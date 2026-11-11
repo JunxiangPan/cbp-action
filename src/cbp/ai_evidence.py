@@ -1,6 +1,6 @@
 """Opt-in AI evidence gate: claims must carry verifiable file/line/command/hash.
 
-No evidence is advisory, subjective conclusions go to human review, and claims
+No evidence and subjective conclusions are advisory, and claims
 that contradict coverage/mutation evidence fail. The gate never calls an LLM.
 """
 from __future__ import annotations
@@ -103,7 +103,7 @@ def run(options: AIEvidenceOptions) -> dict:
     for claim in claims:
         claim_id = str(claim.get("id", "unnamed"))
         if claim.get("subjective") is True:
-            results.append({"id": claim_id, "status": "HUMAN_REVIEW"})
+            results.append({"id": claim_id, "status": "ADVISORY"})
             continue
         evidence = claim.get("evidence")
         if not isinstance(evidence, list) or not evidence:
@@ -130,8 +130,6 @@ def run(options: AIEvidenceOptions) -> dict:
         else:
             results.append({"id": claim_id, "status": "PASS"})
     status = "FAIL" if findings else "PASS"
-    if status == "PASS" and any(item["status"] == "HUMAN_REVIEW" for item in results):
-        status = "HUMAN_REVIEW"
-    elif status == "PASS" and any(item["status"] == "ADVISORY" for item in results):
+    if status == "PASS" and any(item["status"] == "ADVISORY" for item in results):
         status = "ADVISORY"
     return {"gate": "ai-evidence", "status": status, "findings": findings, "claims": results}
