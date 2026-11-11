@@ -582,3 +582,14 @@ Every other job downloads the `cbp-dist` artifact.
 ## VM-only evidence
 
 VM-only chaos evidence remains an explicit gap. v1.2.0 is backed by CI, RC attestation and consumer parity, not by a VM acceptance report; do not describe CI evidence as VM acceptance.
+
+## CBF privacy gate (Phase 0)
+
+**CBF is not integrated yet.** Status: `PENDING_CBF_0.1.0`; there is **no CBF
+PASS** for this project or its releases. The `cbf-privacy-gate` job name is
+reserved but not active; no `continue-on-error` / `if: false` placeholder is
+used. See [`docs/CBF_ADOPTION.md`](docs/CBF_ADOPTION.md).
+
+Once CBF 0.1.0rc1 is available, this project must pin a CBF policy and run
+`cbf gate --surface git` before upload/release. Until then, do not describe the
+project as CBF-compatible or CBF-passed.
