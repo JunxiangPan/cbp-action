@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.5.0 — 2026-11-11 (development)
+
+- Adds opt-in `--target-mutation`: configurable command/report/threshold,
+  report SHA256, changed-code score; strict profile fails exit 3.
+- Adds opt-in `--test-quality`: no-assertion tests, `assert True`, empty skips,
+  deleted tests; Python AST + generic language adapter.
+- Adds opt-in `--ai-evidence`: JSON claims with file/line/command/hash checks;
+  contradictions with coverage/mutation FAIL; no evidence is ADVISORY;
+  subjective claims are HUMAN_REVIEW.
+- CBP remains independent of CBE (no import, no install requirement).
+- Default CBP 1.4.0 behavior, frozen schema, exit codes, 20% skip and
+  CBP-BODY-001 are unchanged.
+- Not released, not tagged, not published.
+
 ## 1.4.0 — 2026-11-11 (development)
 
 - Adds the opt-in `--profile strict` evidence profile. The default 1.3.2 path

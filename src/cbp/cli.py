@@ -205,13 +205,30 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
     parser.add_argument("--identity-regexp", default="")
     parser.add_argument("--oidc-issuer", default="https://token.actions.githubusercontent.com")
     parser.add_argument("--tags-expected", default="docs/tags-expected.json")
-    parser.add_argument("--sbom", default="docs/1.4.0/SBOM.json")
+    parser.add_argument("--sbom", default="docs/1.5.0/SBOM.json")
     parser.add_argument("--mutation-report", default="docs/1.3.0/MUTATION_REPORT.md")
     parser.add_argument("--hostile-corpus", default="tests/hostile/corpus.json")
     parser.add_argument("--gate-manifest", default="quality/GATES.sha256")
     parser.add_argument("--strict-lockfile", default="requirements-test.lock")
     parser.add_argument("--strict-installer", default="install-test.sh")
     parser.add_argument("--strict-report", default="strict-profile.json")
+    parser.add_argument("--target-mutation", action="store_true")
+    parser.add_argument("--mutation-command", default="")
+    parser.add_argument("--target-mutation-report", default="mutation-report.json")
+    parser.add_argument("--mutation-threshold", type=float, default=0.95)
+    parser.add_argument("--changed-code-score", type=float, default=0.90)
+    parser.add_argument("--mutation-report-sha256", default="")
+    parser.add_argument("--mutation-timeout", type=int, default=300)
+    parser.add_argument("--test-quality", action="store_true")
+    parser.add_argument("--test-paths", action="append", default=[])
+    parser.add_argument("--test-language", choices=("python", "generic"), default="python")
+    parser.add_argument("--test-baseline", default="")
+    parser.add_argument("--test-quality-report", default="")
+    parser.add_argument("--ai-evidence", action="store_true")
+    parser.add_argument("--ai-evidence-file", default="ai-evidence.json")
+    parser.add_argument("--ai-coverage-json", default="")
+    parser.add_argument("--ai-mutation-report", default="")
+    parser.add_argument("--ai-evidence-report", default="")
     parser.add_argument("--v12", action="store_true")
     parser.add_argument("--v12-report", default="")
     parser.add_argument("--v12-only", default="")
@@ -332,6 +349,42 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
             installer=Path(args.strict_installer),
             report=Path(args.strict_report),
         ))
+
+    if args.target_mutation:
+        from .target_mutation import MutationOptions, run as mutation_run
+        result = mutation_run(MutationOptions(
+            root=Path(args.root), report=Path(args.target_mutation_report),
+            command=args.mutation_command, threshold=args.mutation_threshold,
+            changed_code_threshold=args.changed_code_score,
+            expected_sha256=args.mutation_report_sha256,
+            timeout_seconds=args.mutation_timeout,
+        ))
+        print(json.dumps(result, ensure_ascii=False))
+        return report_schema.EXIT_GATE if result["status"] == "FAIL" else report_schema.EXIT_PASS
+
+    if args.test_quality:
+        from .test_quality import TestQualityOptions, run as quality_run
+        result = quality_run(TestQualityOptions(
+            root=Path(args.root), paths=tuple(args.test_paths or ["tests"]),
+            language=args.test_language,
+            baseline=Path(args.test_baseline) if args.test_baseline else None,
+        ))
+        if args.test_quality_report:
+            Path(args.test_quality_report).write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(result, ensure_ascii=False))
+        return report_schema.EXIT_GATE if result["status"] == "FAIL" else report_schema.EXIT_PASS
+
+    if args.ai_evidence:
+        from .ai_evidence import AIEvidenceOptions, run as ai_run
+        result = ai_run(AIEvidenceOptions(
+            root=Path(args.root), claims=Path(args.ai_evidence_file),
+            coverage_json=Path(args.ai_coverage_json) if args.ai_coverage_json else None,
+            mutation_report=Path(args.ai_mutation_report) if args.ai_mutation_report else None,
+        ))
+        if args.ai_evidence_report:
+            Path(args.ai_evidence_report).write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(result, ensure_ascii=False))
+        return report_schema.EXIT_GATE if result["status"] == "FAIL" else report_schema.EXIT_PASS
 
     if args.v12:
         from . import v12_rules
