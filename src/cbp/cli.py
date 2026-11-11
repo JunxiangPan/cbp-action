@@ -229,6 +229,13 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
     parser.add_argument("--ai-coverage-json", default="")
     parser.add_argument("--ai-mutation-report", default="")
     parser.add_argument("--ai-evidence-report", default="")
+    parser.add_argument("--semantic-claims", action="store_true")
+    parser.add_argument("--semantic-claims-file", default="semantic-claims.json")
+    parser.add_argument("--semantic-mode", choices=("program", "local", "cloud"), default="program")
+    parser.add_argument("--semantic-no-evidence", choices=("review", "fail"), default="review")
+    parser.add_argument("--semantic-cloud-consent", action="store_true")
+    parser.add_argument("--semantic-backend-command", default="")
+    parser.add_argument("--semantic-report", default="")
     parser.add_argument("--v12", action="store_true")
     parser.add_argument("--v12-report", default="")
     parser.add_argument("--v12-only", default="")
@@ -383,6 +390,24 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
         ))
         if args.ai_evidence_report:
             Path(args.ai_evidence_report).write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(result, ensure_ascii=False))
+        return report_schema.EXIT_GATE if result["status"] == "FAIL" else report_schema.EXIT_PASS
+
+    if args.semantic_claims:
+        from .semantic_claims import SemanticClaimsError, SemanticClaimsOptions, run as semantic_run
+        try:
+            result = semantic_run(SemanticClaimsOptions(
+                root=Path(args.root), claims=Path(args.semantic_claims_file),
+                mode=args.semantic_mode, no_evidence=args.semantic_no_evidence,
+                cloud_consent=args.semantic_cloud_consent,
+                backend_command=args.semantic_backend_command,
+            ))
+        except SemanticClaimsError as exc:
+            print(json.dumps({"gate": "semantic-claims", "status": "FAIL",
+                              "error": str(exc)}, ensure_ascii=False))
+            return report_schema.EXIT_INPUT
+        if args.semantic_report:
+            Path(args.semantic_report).write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result, ensure_ascii=False))
         return report_schema.EXIT_GATE if result["status"] == "FAIL" else report_schema.EXIT_PASS
 
