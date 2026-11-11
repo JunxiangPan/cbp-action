@@ -591,5 +591,8 @@ reserved as a name only; no workflow file is added in Phase 0. No
 `continue-on-error` / `if: false` bypass exists. See [`docs/CBF_ADOPTION.md`](docs/CBF_ADOPTION.md).
 
 Once CBF 0.1.0rc1 is available, this project must pin a CBF policy and run
-`cbf gate --surface git` before upload/release. Until then, do not describe the
-project as CBF-compatible or CBF-passed.
+`cbf gate --surface git` before tag / GitHub Release / PyPI upload. CBF is a
+pre-release gate, not a replacement for CBP's coverage, dependency, docs,
+binary or claims gates. A `cbf-evidence/v1` sidecar is optional and must not
+change the frozen quality-manifest schema. Until CBF is available, do not
+describe the project as CBF-compatible or CBF-passed.

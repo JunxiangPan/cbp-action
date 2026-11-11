@@ -27,7 +27,14 @@ and does not require it to be installed for normal development.
   `cbf gate --surface git`.
 - Block GitHub Release / PyPI on CBF failure; record `cbf-evidence/v1`.
 
-## Boundary
+## Boundary: CBF is not a CBP replacement
 
-CBF is a release/upload privacy gate, not a replacement for CBP's evidence
-gate. CBP does not modify its frozen quality-manifest schema or import CBF.
+- CBF is a **pre-release privacy gate**. In Phase 1 it runs before tag,
+  GitHub Release and PyPI upload (`cbf gate --surface git`).
+- `cbf-evidence/v1` is an **optional sidecar only**. It is not written into the
+  frozen quality-manifest and does not add or remove manifest fields.
+- CBP does **not import CBF** and does not make it a runtime/install dependency.
+- CBF does **not replace** CBP's own coverage, dependency, docs, binary or
+  claims gates. Both CBF and those CBP gates must pass; one cannot waive the
+  other.
+- Phase 0 has no active CBF gate, no policy pin and no CBF PASS.
