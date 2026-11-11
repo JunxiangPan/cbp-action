@@ -21,7 +21,7 @@ def _root(tmp: Path) -> Path:
     )
     (tmp / ".github/workflows").mkdir(parents=True)
     (tmp / ".github/workflows/ci.yml").write_text("runs-on: windows-latest\n", encoding="utf-8")
-    (tmp / "docs/tags-expected.json").write_text("{}", encoding="utf-8")
+    (tmp / "docs/tags-expected.json").write_text(json.dumps({"v1.0.0": "a" * 40}), encoding="utf-8")
     (tmp / "quality").mkdir()
     (tmp / "quality/GATES.sha256").write_text("", encoding="utf-8")
     (tmp / "manifest.json").write_text("{}", encoding="utf-8")
@@ -35,7 +35,7 @@ def _options(root: Path) -> strict_profile.StrictOptions:
         manifest=Path("manifest.json"),
         provenance=Path("provenance.json"),
         bundle_dir=Path("signatures"),
-        artifacts=(),
+        artifacts=(Path("a.whl"),),
         identity_regexp="identity",
     )
 
@@ -45,6 +45,7 @@ def _mock_all(monkeypatch, status: str = "SIGNED") -> None:
     monkeypatch.setattr(strict_profile.artifact_integrity, "action_pin_findings", lambda *args: [])
     monkeypatch.setattr(strict_profile.dependency_gate, "run", lambda *args: (True, "locked"))
     monkeypatch.setattr(strict_profile.tag_immutability, "diff", lambda *args: [])
+    monkeypatch.setattr(strict_profile, "_actual_tags", lambda root, tags: {"v1.0.0": "a" * 40})
     monkeypatch.setattr(strict_profile.provenance, "verify", lambda *args, **kwargs: {"status": status, "problems": []})
 
 

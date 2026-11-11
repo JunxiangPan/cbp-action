@@ -119,6 +119,8 @@ def run(options: StrictOptions) -> int:
     # 7. Tag immutability against the expected map
     try:
         expected = json.loads((root / options.tags_expected).read_text(encoding="utf-8"))
+        if not expected:
+            raise ValueError("expected tag map is empty")
         actual = _actual_tags(root, sorted(expected))
         moved = tag_immutability.diff(expected, actual)
         add("tag_immutability", not moved, "; ".join(moved) or f"tags={len(expected)}")
@@ -142,18 +144,18 @@ def run(options: StrictOptions) -> int:
 
     # 10. Signed provenance + external verifier
     try:
-        artifacts = [root / item for item in options.artifacts]
-        result = provenance.verify(
-            root / options.provenance, root / options.manifest, artifacts,
-            bundle_dir=root / options.bundle_dir,
-            identity_regexp=options.identity_regexp,
-            oidc_issuer=options.oidc_issuer,
-        )
-        # provenance.verify is normally called with the artifact list; the caller
-        # supplies the artifacts via the manifest's artifact_hashes only when
-        # they are present. A stricter zero-artifact call is intentionally a fail.
-        add("provenance", result["status"] == "SIGNED" and not result["problems"],
-            json.dumps(result, ensure_ascii=False))
+        if not options.artifacts:
+            add("provenance", False, "at least one --strict-artifact is required")
+        else:
+            artifacts = [root / item for item in options.artifacts]
+            result = provenance.verify(
+                root / options.provenance, root / options.manifest, artifacts,
+                bundle_dir=root / options.bundle_dir,
+                identity_regexp=options.identity_regexp,
+                oidc_issuer=options.oidc_issuer,
+            )
+            add("provenance", result["status"] == "SIGNED" and not result["problems"],
+                json.dumps(result, ensure_ascii=False))
     except Exception as exc:
         add("provenance", False, str(exc))
 
