@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.2 — 2026-11-12
+
+- Fixes `cbp gate --version`: PEP 440 prereleases such as `0.1.0rc1` are now
+  accepted by the gate report generator, matching the manifest/report schema.
+- Adds tests for `0.1.0rc1`, `0.1.0`, `1.5.1` and invalid versions.
+- Adds a real CBP gate report for CBF 0.1.0rc1 with `producer_id: cbp`
+  (no CBF-side translation), plus the resulting subject manifest and hashes.
+- Frozen schema, exit codes, 20% skip and CBP-BODY-001 are unchanged.
+
 ## 1.5.1 — 2026-11-12
 
 - Manifest/report version validation accepts PEP 440 prereleases such as
