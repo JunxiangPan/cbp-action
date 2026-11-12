@@ -12,7 +12,7 @@ import re
 # release segments (X.Y.Z) to preserve the historical minimum.
 PEP440_PATTERN = re.compile(
     r"^v?"
-    r"(?P<release>\d+(?:\.\d+){2,})"
+    r"(?P<release>\d+\.\d+\.\d+)"
     r"(?:(?:[-_.]?)(?P<pre>a|b|c|rc|alpha|beta|pre|preview)(?:[-_.]?)(?P<pre_n>\d+))?"
     r"(?:(?:[-_.]?)post(?:[-_.]?)(?P<post>\d+))?"
     r"(?:(?:[-_.]?)dev(?:[-_.]?)(?P<dev>\d+))?"

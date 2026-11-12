@@ -12,6 +12,7 @@ from pathlib import Path
 
 from . import baseline, binary_gate, suppression, cbc_event, claims_gate, comment_gate, coverage_gate, custom_rules, dependency_gate, docs_gate, encoding_gate, errata, report_parser, report_schema, sarif, upgrade_gate, verify_release
 from .config import SCHEMA_VERSION, load_config
+from .versioning import normalize_version
 
 
 def _init(argv: list[str]) -> int:  # pragma: no cover - exercised via subprocess CLI
@@ -717,12 +718,12 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - exercised 
                               "error": f"invalid --producer-id {report_producer_id!r}"}, ensure_ascii=False))
             return report_schema.EXIT_INPUT
         if args.version:
-            raw_version = args.version.lstrip("vV")
-            if not re.fullmatch(r"\d+\.\d+\.\d+", raw_version):
+            try:
+                report_version = normalize_version(args.version)
+            except ValueError as exc:
                 print(json.dumps({"gate_status": "FAIL", "exit_code": report_schema.EXIT_INPUT,
-                                  "error": f"invalid --version {args.version!r}"}, ensure_ascii=False))
+                                  "error": f"invalid --version {args.version!r}: {exc}"}, ensure_ascii=False))
                 return report_schema.EXIT_INPUT
-            report_version = "v" + raw_version
         else:
             report_version = "v" + str(getattr(cfg, "release_version", "") or "0.0.0").lstrip("v")
         report = {
